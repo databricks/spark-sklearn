@@ -6,6 +6,7 @@ build/*.jar
 # sbt specific
 .cache/
 .history/
+.idea/
 .lib/
 dist/*
 target/
