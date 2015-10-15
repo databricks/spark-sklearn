@@ -4,7 +4,7 @@ Class for converting between scikit-learn models and PySpark ML models
 
 from collections import namedtuple
 
-import numpy
+import numpy as np
 
 from sklearn.linear_model import LogisticRegression as SKL_LogisticRegression
 from sklearn.linear_model import LinearRegression as SKL_LinearRegression
@@ -15,7 +15,12 @@ from pyspark.mllib.linalg import Vectors
 
 from util import _new_java_obj, _randomUID
 
+
+# ClassNames contains 2 corresponding fields:
+#  .jvm (str): name of JVM class
+#  .py (class): PySpark class
 ClassNames = namedtuple('ClassNames', ['jvm', 'py'])
+
 
 class Converter(object):
     """
@@ -68,21 +73,21 @@ class Converter(object):
         jvm_cls_name = self._skl2spark_classes[skl_cls].jvm
         intercept = model.intercept_
         weights = model.coef_
-        if len(numpy.shape(weights)) == 1\
-                or (len(numpy.shape(weights)) == 2 and numpy.shape(weights)[0] == 1):
+        if len(np.shape(weights)) == 1\
+                or (len(np.shape(weights)) == 2 and np.shape(weights)[0] == 1):
             # Binary classification
             uid = _randomUID(skl_cls)
             _java_model = _new_java_obj(self.sc, jvm_cls_name, uid, Vectors.dense(weights), float(intercept))
             return py_cls(_java_model)
-        elif len(numpy.shape(weights)) == 2 and skl_cls == SKL_LogisticRegression:
+        elif len(np.shape(weights)) == 2 and skl_cls == SKL_LogisticRegression:
             # Multiclass label
             raise ValueError("Converter.toSpark cannot convert a multiclass sklearn Logistic" +
                              " Regression model to Spark because Spark does not yet support" +
                              " multiclass.  Given model is for %d classes." %
-                             numpy.shape(weights)[0])
+                             np.shape(weights)[0])
         else:
             raise Exception("Converter.toSpark experienced unknown error when trying to convert" +
-                            " a model of type: " + type(model) + "  " + len(numpy.shape(weights)))
+                            " a model of type: " + type(model) + "  " + len(np.shape(weights)))
 
     def toSKLearn(self, model):
         """
@@ -110,6 +115,6 @@ class Converter(object):
         intercept = model.intercept
         weights = model.weights
         skl = skl_cls()
-        skl.intercept_ = numpy.float64(intercept)
+        skl.intercept_ = np.float64(intercept)
         skl.coef_ = weights.toArray()
         return skl

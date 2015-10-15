@@ -10,7 +10,7 @@ if sys.version_info[:2] <= (2, 6):
 else:
     import unittest
 
-import numpy
+import numpy as np
 
 from sklearn.linear_model import LogisticRegression as SKL_LogisticRegression
 from sklearn.linear_model import LinearRegression as SKL_LinearRegression
@@ -21,7 +21,7 @@ from pyspark.ml.regression import LinearRegression, LinearRegressionModel
 from pyspark.mllib.linalg import Vectors
 from pyspark.sql import SQLContext
 
-from converter import Converter
+from pdspark.converter import Converter
 
 sc = SparkContext('local[4]', "spark-sklearn tests")
 
@@ -29,11 +29,11 @@ class MLlibTestCase(unittest.TestCase):
     def setUp(self):
         self.sc = sc
         self.sql = SQLContext(sc)
-        self.X = numpy.array([[1,2,3],
-                              [-1,2,3], [1,-2,3], [1,2,-3],
-                              [-1,-2,3], [1,-2,-3], [-1,2,-3],
-                              [-1,-2,-3]])
-        self.y = numpy.array([1, 0, 1, 1, 0, 1, 0, 0])
+        self.X = np.array([[1,2,3],
+                           [-1,2,3], [1,-2,3], [1,2,-3],
+                           [-1,-2,3], [1,-2,-3], [-1,2,-3],
+                           [-1,-2,-3]])
+        self.y = np.array([1, 0, 1, 1, 0, 1, 0, 0])
         data = [(float(self.y[i]), Vectors.dense(self.X[i])) for i in range(len(self.y))]
         self.df = self.sql.createDataFrame(data, ["label", "features"])
 
