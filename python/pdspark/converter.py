@@ -5,14 +5,18 @@ Class for converting between scikit-learn models and PySpark ML models
 from collections import namedtuple
 
 import numpy as np
+import scipy
+from scipy.sparse import csr_matrix
 
 from sklearn.linear_model import LogisticRegression as SKL_LogisticRegression
 from sklearn.linear_model import LinearRegression as SKL_LinearRegression
 
 from pyspark.ml.classification import LogisticRegressionModel
 from pyspark.ml.regression import LinearRegressionModel
-from pyspark.mllib.linalg import Vectors
+from pyspark.mllib.linalg import DenseVector, SparseVector, Vectors, VectorUDT
+from pyspark.sql.functions import udf
 
+from udt import CSRVectorUDT
 from util import _new_java_obj, _randomUID
 
 
@@ -118,3 +122,42 @@ class Converter(object):
         skl.intercept_ = np.float64(intercept)
         skl.coef_ = weights.toArray()
         return skl
+
+    def toPandas(self, df):
+        """
+        This is similar to the Spark DataFrame built-in toPandas() method, but it handles
+        MLlib Vector columns differently.  It converts MLlib Vectors into rows of
+        scipy.sparse.csr_matrix, which is generally friendlier for PyData tools like scikit-learn.
+        :param df: Spark DataFrame
+        :return:  Pandas dataframe
+        """
+        cols = df.columns
+        # Convert any MLlib Vector columns to scipy.sparse.csr_matrix
+        matrixCols = []
+        def toscipy(v):
+            if isinstance(v, DenseVector):
+                return csr_matrix((v.values, np.array(range(v.size)), np.array([0, v.size])),
+                                  shape=(1, v.size))
+            elif isinstance(v, SparseVector):
+                return csr_matrix((v.values, v.indices, np.array([0, len(v.indices)])),
+                                  shape=(1, v.size))
+            else:
+                raise TypeError("Converter.toPandas found unknown Vector type: %s" % type(v))
+        tosparse = udf(lambda v: toscipy(v), CSRVectorUDT())
+        for i in range(len(cols)):
+            c = cols[i]
+            if isinstance(df.schema.fields[i].dataType, VectorUDT):
+                cols[i] = tosparse(df[c]).alias(c)
+                matrixCols.append(c)
+            else:
+                cols[i] = df[c]
+        return df.select(*cols).toPandas()
+
+    def toScipy(self, X):
+        if isinstance(X, np.ndarray) and len(X) > 0 and \
+                isinstance(X[0], csr_matrix) and X[0].shape[0] == 1:
+            # concatenate rows into a single csr_matrix
+            return scipy.sparse.vstack(X).tocsr()
+        else:
+            raise TypeError("Converter.toScipy expected numpy.ndarray of"
+                            " scipy.sparse.csr.csr_matrix instances, but found: %s" % type(X))
