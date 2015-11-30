@@ -6,6 +6,13 @@ if [ -z "$SPARK_HOME" ]; then
     exit 1
 fi
 
-export PYTHONPATH=$PYTHONPATH:$SPARK_HOME/python:.
+LIBS=""
+for lib in "$SPARK_HOME/python/lib"/*zip ; do
+  LIBS=$LIBS:$lib
+done
+
+export PYTHONPATH=$PYTHONPATH:$SPARK_HOME/python$LIBS:.
+
+echo $PYTHONPATH
 
 python pdspark/tests.py
