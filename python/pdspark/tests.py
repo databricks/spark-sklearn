@@ -22,6 +22,8 @@ from sklearn.feature_extraction.text import HashingVectorizer as SKL_HashingVect
 from sklearn.feature_extraction.text import TfidfTransformer as SKL_TfidfTransformer
 from sklearn.grid_search import GridSearchCV as SKL_GridSearchCV
 from sklearn.pipeline import Pipeline as SKL_Pipeline
+from sklearn import svm, grid_search, datasets
+
 
 from pyspark import SparkContext
 from pyspark.ml import Pipeline
@@ -134,6 +136,27 @@ class CSRVectorUDTTests(MLlibTestCase):
         self.assertEqual(pd.features.values[0][0,0], 0.1)
         self.assertEqual(pd.features.values[0][0,1], 0.2)
 
+class CVTests2(MLlibTestCase):
+
+    def setUp(self):
+        super(CVTests2, self).setUp()
+        self.converter = Converter(self.sc)
+
+    def test_example(self):
+        # The classic example from the sklearn documentation
+        iris = datasets.load_iris()
+        parameters = {'kernel':('linear', 'rbf'), 'C':[1, 10]}
+        svr = svm.SVC()
+        clf = grid_search.GridSearchCV(svr, parameters)
+        clf.fit(iris.data, iris.target)
+
+        clf2 = GridSearchCV(sc, svr, parameters)
+        clf2.fit(iris.data, iris.target)
+
+        b1 = clf.estimator
+        b2 = clf2.estimator
+        self.assertEqual(b1.get_params(), b2.get_params())
+
 
 class CVTests(MLlibTestCase):
 
@@ -229,6 +252,7 @@ class CVTests(MLlibTestCase):
         for gs in skl_gs.grid_scores_:
             pass # assert(gs.)
 
+    @unittest.skip("demo, disabled because it requires some specific files from Joseph")
     def test_demo(self):
         print "\n========================"
         print "DEMO PART 1"
