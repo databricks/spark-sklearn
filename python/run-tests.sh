@@ -13,6 +13,5 @@ done
 
 export PYTHONPATH=$PYTHONPATH:$SPARK_HOME/python$LIBS:.
 
-echo $PYTHONPATH
-
 python pdspark/tests.py
+nosetests

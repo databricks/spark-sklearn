@@ -10,8 +10,9 @@ It is an alternative to the [Joblib](https://pythonhosted.org/joblib/parallel.ht
 ## Installation
 
 This package has the following requirements:
- - scikit-learn (version 0.17 has been tested, older versions may work too)
+ - a recent version of scikit-learn (version 0.17 has been tested, older versions may work too)
  - spark >= 1.6 Spark may be downloaded from the [spark official website](http://spark.apache.org/). In order to use spark-skleran, you need to use the pyspark interpreter or another spark-compliant python interpreter (jupyter, zeppelin).
+ - [nose](https://nose.readthedocs.org) (testing only)
 
 This package is available on PYPI:
 
@@ -24,7 +25,7 @@ If you want to use a developer version, you just need to make sure is in the PYT
 
 __Running tests__ You can directly run tests:
 
-  ./python/run-tests.sh
+  cd python && ./run-tests.sh
 
 This requires the environment variable `SPARK_HOME` to point to your local copy of spark.
 
