@@ -10,6 +10,168 @@ from scipy.sparse.csr import csr_matrix
 
 from sklearn.cross_validation import KFold
 from sklearn.grid_search import GridSearchCV as SKL_GridSearchCV
+from sklearn.grid_search import BaseSearchCV, _check_param_grid, ParameterGrid, _CVScoreTuple
+
+from sklearn.metrics.scorer import check_scoring
+from sklearn.utils.validation import _num_samples, indexable
+from sklearn.base import BaseEstimator, is_classifier, clone
+from sklearn.cross_validation import check_cv
+from collections import namedtuple, Sized
+from sklearn.externals.joblib import Parallel, delayed
+from sklearn.cross_validation import _fit_and_score, _safe_split
+
+class GridSearchCV2(BaseSearchCV):
+
+    def __init__(self, sc, estimator, param_grid, scoring=None, fit_params=None,
+                 n_jobs=1, iid=True, refit=True, cv=None, verbose=0,
+                 pre_dispatch='2*n_jobs', error_score='raise'):
+        super(GridSearchCV2, self).__init__(
+            estimator, scoring, fit_params, n_jobs, iid,
+            refit, cv, verbose, pre_dispatch, error_score)
+        self.sc = sc
+        self.param_grid = param_grid
+        _check_param_grid(param_grid)
+
+    def fit(self, X, y=None):
+        """Run fit with all sets of parameters.
+
+        Parameters
+        ----------
+
+        X : array-like, shape = [n_samples, n_features]
+            Training vector, where n_samples is the number of samples and
+            n_features is the number of features.
+
+        y : array-like, shape = [n_samples] or [n_samples, n_output], optional
+            Target relative to X for classification or regression;
+            None for unsupervised learning.
+
+        """
+        return self._fit(X, y, ParameterGrid(self.param_grid))
+
+    def _fit(self, X, y, parameter_iterable):
+        """Actual fitting,  performing the search over parameters."""
+
+        estimator = self.estimator
+        cv = self.cv
+        self.scorer_ = check_scoring(self.estimator, scoring=self.scoring)
+
+        n_samples = _num_samples(X)
+        X, y = indexable(X, y)
+
+        if y is not None:
+            if len(y) != n_samples:
+                raise ValueError('Target variable (y) has a different number '
+                                 'of samples (%i) than data (X: %i samples)'
+                                 % (len(y), n_samples))
+        cv = check_cv(cv, X, y, classifier=is_classifier(estimator))
+
+        if self.verbose > 0:
+            if isinstance(parameter_iterable, Sized):
+                n_candidates = len(parameter_iterable)
+                print("Fitting {0} folds for each of {1} candidates, totalling"
+                      " {2} fits".format(len(cv), n_candidates,
+                                         n_candidates * len(cv)))
+
+        base_estimator = clone(self.estimator)
+
+        pre_dispatch = self.pre_dispatch
+
+        param_grid = [(parameters, train, test)
+                      for parameters in parameter_iterable
+                      for (train, test) in cv]
+        # Because the original python code expects a certain order for the elements, we need to
+        # respect it.
+        indexed_param_grid = zip(range(len(param_grid)), param_grid)
+        par_param_grid = self.sc.parallelize(indexed_param_grid, self.n_jobs)
+        X_bc = self.sc.broadcast(X)
+        y_bc = self.sc.broadcast(y)
+
+        estimator = clone(base_estimator)
+        scorer = self.scorer_
+        verbose = self.verbose
+        fit_params = self.fit_params
+        error_score = self.error_score
+        fas = _fit_and_score
+
+        def fun(tup):
+            (index, (parameters, train, test)) = tup
+            local_estimator = clone(base_estimator)
+            local_X = X_bc.value
+            local_y = y_bc.value
+            res = fas(local_estimator, local_X, local_y, scorer, train, test, verbose,
+                                  parameters, fit_params,
+                                  return_parameters=True, error_score=error_score)
+            return (index, res)
+        indexed_out0 = dict(par_param_grid.map(fun).collect())
+        out = [indexed_out0[idx] for idx in range(len(param_grid))]
+
+        pre_dispatch = self.pre_dispatch
+
+        out0 = Parallel(
+            n_jobs=self.n_jobs, verbose=self.verbose,
+            pre_dispatch=pre_dispatch
+        )(
+            delayed(_fit_and_score)(clone(base_estimator), X, y, self.scorer_,
+                                    train, test, self.verbose, parameters,
+                                    self.fit_params, return_parameters=True,
+                                    error_score=self.error_score)
+                for parameters in parameter_iterable
+                for train, test in cv)
+
+        print "out 00000:", sorted(out0)
+        print "out 11111:", sorted(out)
+        X_bc.unpersist()
+        y_bc.unpersist()
+
+        # Out is a list of triplet: score, estimator, n_test_samples
+        n_fits = len(out)
+        n_folds = len(cv)
+
+        scores = list()
+        grid_scores = list()
+        for grid_start in range(0, n_fits, n_folds):
+            n_test_samples = 0
+            score = 0
+            all_scores = []
+            for this_score, this_n_test_samples, _, parameters in \
+                    out[grid_start:grid_start + n_folds]:
+                all_scores.append(this_score)
+                if self.iid:
+                    this_score *= this_n_test_samples
+                    n_test_samples += this_n_test_samples
+                score += this_score
+            if self.iid:
+                score /= float(n_test_samples)
+            else:
+                score /= float(n_folds)
+            scores.append((score, parameters))
+            # TODO: shall we also store the test_fold_sizes?
+            grid_scores.append(_CVScoreTuple(
+                parameters,
+                score,
+                np.array(all_scores)))
+        # Store the computed scores
+        self.grid_scores_ = grid_scores
+
+        # Find the best parameters by comparing on the mean validation score:
+        # note that `sorted` is deterministic in the way it breaks ties
+        best = sorted(grid_scores, key=lambda x: x.mean_validation_score,
+                      reverse=True)[0]
+        self.best_params_ = best.parameters
+        self.best_score_ = best.mean_validation_score
+
+        if self.refit:
+            # fit the best estimator using the entire dataset
+            # clone first to work around broken estimators
+            best_estimator = clone(base_estimator).set_params(
+                **best.parameters)
+            if y is not None:
+                best_estimator.fit(X, y, **self.fit_params)
+            else:
+                best_estimator.fit(X, **self.fit_params)
+            self.best_estimator_ = best_estimator
+        return self
 
 
 class GridSearchCV(object):
