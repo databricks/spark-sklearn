@@ -106,21 +106,6 @@ class GridSearchCV2(BaseSearchCV):
         indexed_out0 = dict(par_param_grid.map(fun).collect())
         out = [indexed_out0[idx] for idx in range(len(param_grid))]
 
-        pre_dispatch = self.pre_dispatch
-
-        out0 = Parallel(
-            n_jobs=self.n_jobs, verbose=self.verbose,
-            pre_dispatch=pre_dispatch
-        )(
-            delayed(_fit_and_score)(clone(base_estimator), X, y, self.scorer_,
-                                    train, test, self.verbose, parameters,
-                                    self.fit_params, return_parameters=True,
-                                    error_score=self.error_score)
-                for parameters in parameter_iterable
-                for train, test in cv)
-
-        print "out 00000:", sorted(out0)
-        print "out 11111:", sorted(out)
         X_bc.unpersist()
         y_bc.unpersist()
 

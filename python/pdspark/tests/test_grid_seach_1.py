@@ -25,7 +25,12 @@ sklearn.grid_search.GridSearchCV = SPGridSearchWrapper
 from sklearn.tests import test_grid_search
 import unittest
 
-blacklist = set(['test_pickle', 'test_grid_search_precomputed_kernel_error_nonsquare'])
+# These methods do not raise ValueError but something different
+blacklist = set(['test_pickle',
+                 'test_grid_search_precomputed_kernel_error_nonsquare',
+                 'test_grid_search_precomputed_kernel_error_kernel_function',
+                 'test_grid_search_precomputed_kernel',
+                 'test_grid_search_failing_classifier_raise'])
 
 def all_methods():
   return [(mname, method) for (mname, method) in test_grid_search.__dict__.items()
