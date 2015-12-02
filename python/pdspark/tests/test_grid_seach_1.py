@@ -1,10 +1,10 @@
-__author__ = 'tjhunter'
+import unittest
 
 import sklearn.grid_search
 
 from pyspark import SparkContext
+
 from pdspark import GridSearchCV2
-import unittest
 # Overwrite the sklearn GridSearch in this suite so that we can run the same tests with the same
 # parameters.
 
