@@ -210,7 +210,7 @@ class GridSearchCV2(BaseSearchCV):
         # Because the original python code expects a certain order for the elements, we need to
         # respect it.
         indexed_param_grid = zip(range(len(param_grid)), param_grid)
-        par_param_grid = self.sc.parallelize(indexed_param_grid)
+        par_param_grid = self.sc.parallelize(indexed_param_grid, len(indexed_param_grid))
         X_bc = self.sc.broadcast(X)
         y_bc = self.sc.broadcast(y)
 
