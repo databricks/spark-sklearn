@@ -1,15 +1,12 @@
 import codecs
 import os
-import re
 
-from setuptools import setup, find_packages
+from setuptools import setup
 
 
 ###############################################################################
 
-NAME = "attrs"
 PACKAGES = ["pdspark"]
-META_PATH = os.path.join("src", "attr", "__init__.py")
 KEYWORDS = ["spark", "scikit-learn", "distributed computing", "machine learning"]
 CLASSIFIERS = [
     "Development Status :: 4 - Beta",
@@ -38,8 +35,8 @@ def read(*parts):
 
 if __name__ == "__main__":
   setup(
-    name="pdspark",
-    description="Integrations tools for running PyData on Spark",
+    name="spark-sklearn",
+    description="Integrations tools for running scikit-learn on Spark",
     license="Apache 2.0",
     url="missing",
     version="0.1.0",
@@ -50,7 +47,6 @@ if __name__ == "__main__":
     keywords=KEYWORDS,
     long_description=read("README.md"),
     packages=PACKAGES,
-    zip_safe=False,
     classifiers=CLASSIFIERS,
     install_requires=INSTALL_REQUIRES,
   )
