@@ -15,12 +15,12 @@ This package is released under the Apache 2.0 licence. See the LICENSE file.
 
 This package has the following requirements:
  - a recent version of scikit-learn. Version 0.17 has been tested, older versions may work too.
- - spark >= 1.5. Spark may be downloaded from the [spark official website](http://spark.apache.org/). In order to use PDSpark, you need to use the pyspark interpreter or another spark-compliant python interpreter. See the [Spark guide](https://spark.apache.org/docs/0.9.0/python-programming-guide.html) for more details.
+ - spark >= 1.5. Spark may be downloaded from the [spark official website](http://spark.apache.org/). In order to use PDSpark, you need to use the pyspark interpreter or another spark-compliant python interpreter. See the [Spark guide](https://spark.apache.org/docs/1.5.2/programming-guide.html#overview) for more details.
  - [nose](https://nose.readthedocs.org) (testing dependency only)
 
 This package is available on PYPI:
 
-	pip install XXX
+	pip install pdspark
 
 If you want to use a developer version, you just need to make sure the `python/` subdirectory is in the `PYTHONPATH` when launching the pyspark interpreter:
 
