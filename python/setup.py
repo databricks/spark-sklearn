@@ -2,10 +2,8 @@ import codecs
 import os
 
 from setuptools import setup
-
-
-###############################################################################
-
+# See this web page for explanations:
+# https://hynek.me/articles/sharing-your-labor-of-love-pypi-quick-and-dirty/
 PACKAGES = ["pdspark"]
 KEYWORDS = ["spark", "scikit-learn", "distributed computing", "machine learning"]
 CLASSIFIERS = [
@@ -18,8 +16,6 @@ CLASSIFIERS = [
     "Topic :: Scientific/Engineering",
 ]
 INSTALL_REQUIRES = ["scikit-learn >= 0.17"]
-
-###############################################################################
 
 HERE = os.path.abspath(os.path.dirname(__file__) + "../")
 
@@ -38,12 +34,12 @@ if __name__ == "__main__":
     name="spark-sklearn",
     description="Integrations tools for running scikit-learn on Spark",
     license="Apache 2.0",
-    url="missing",
+    url="https://github.com/databricks/spark-sklearn",
     version="0.1.0",
     author="Joseph Bradley",
     author_email="joseph@databricks.com",
-    maintainer="Joseph Bradley",
-    maintainer_email="joseph@databricks.com",
+    maintainer="Tim Hunter",
+    maintainer_email="timhunter@databricks.com",
     keywords=KEYWORDS,
     long_description=read("README.md"),
     packages=PACKAGES,
