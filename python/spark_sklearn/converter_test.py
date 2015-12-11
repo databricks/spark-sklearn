@@ -6,8 +6,8 @@ from pyspark.mllib.linalg import Vectors
 from pyspark.ml.regression import LinearRegression, LinearRegressionModel
 from pyspark.ml.classification import LogisticRegression, LogisticRegressionModel
 
-from pdspark.test_utils import MLlibTestCase
-from pdspark import Converter
+from spark_sklearn.test_utils import MLlibTestCase
+from spark_sklearn import Converter
 
 class ConverterTests(MLlibTestCase):
 

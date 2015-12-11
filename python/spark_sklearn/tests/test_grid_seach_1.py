@@ -2,8 +2,8 @@ import unittest
 
 import sklearn.grid_search
 
-from pdspark import GridSearchCV
-from pdspark.test_utils import create_sc
+from spark_sklearn import GridSearchCV
+from spark_sklearn.test_utils import create_sc
 # Overwrite the sklearn GridSearch in this suite so that we can run the same tests with the same
 # parameters.
 

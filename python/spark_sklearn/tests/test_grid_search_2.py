@@ -23,10 +23,10 @@ else:
 from pyspark.ml import Pipeline
 from pyspark.ml.feature import HashingTF, Tokenizer
 
-from pdspark.converter import Converter
-from pdspark.grid_search import GridSearchCV
+from spark_sklearn.converter import Converter
+from spark_sklearn.grid_search import GridSearchCV
 
-from pdspark.test_utils import MLlibTestCase
+from spark_sklearn.test_utils import MLlibTestCase
 
 class CVTests2(MLlibTestCase):
 

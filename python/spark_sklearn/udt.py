@@ -20,7 +20,7 @@ class CSRVectorUDT(UserDefinedType):
 
     @classmethod
     def module(cls):
-        return "pdspark"
+        return "spark_sklearn"
 
     def serialize(self, obj):
         if isinstance(obj, csr_matrix):
