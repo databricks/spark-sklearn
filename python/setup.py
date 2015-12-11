@@ -7,7 +7,11 @@ from setuptools import setup
 PACKAGES = ["pdspark"]
 KEYWORDS = ["spark", "scikit-learn", "distributed computing", "machine learning"]
 CLASSIFIERS = [
-    "Development Status :: 4 - Beta",
+	"Programming Language :: Python :: 2.6",
+	"Programming Language :: Python :: 2.7",
+	"Programming Language :: Python :: 3",
+	"Programming Language :: Python :: 3.2",
+	"Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Natural Language :: English",
     "License :: OSI Approved :: Apache Software License",
@@ -17,7 +21,7 @@ CLASSIFIERS = [
 ]
 INSTALL_REQUIRES = ["scikit-learn >= 0.17"]
 
-HERE = os.path.abspath(os.path.dirname(__file__) + "../")
+HERE = os.path.abspath(os.path.dirname(__file__) + "/../")
 
 
 def read(*parts):
@@ -28,21 +32,20 @@ def read(*parts):
     with codecs.open(os.path.join(HERE, *parts), "rb", "utf-8") as f:
         return f.read()
 
-
-if __name__ == "__main__":
-  setup(
-    name="spark-sklearn",
-    description="Integrations tools for running scikit-learn on Spark",
-    license="Apache 2.0",
-    url="https://github.com/databricks/spark-sklearn",
-    version="0.1.0",
-    author="Joseph Bradley",
-    author_email="joseph@databricks.com",
-    maintainer="Tim Hunter",
-    maintainer_email="timhunter@databricks.com",
-    keywords=KEYWORDS,
-    long_description=read("README.md"),
-    packages=PACKAGES,
-    classifiers=CLASSIFIERS,
-    install_requires=INSTALL_REQUIRES,
-  )
+setup(
+	name="spark-sklearn",
+	description="Integrations tools for running scikit-learn on Spark",
+	license="Apache 2.0",
+	url="https://github.com/databricks/spark-sklearn",
+	version="0.1.0",
+	author="Joseph Bradley",
+	author_email="joseph@databricks.com",
+	maintainer="Tim Hunter",
+	maintainer_email="timhunter@databricks.com",
+	keywords=KEYWORDS,
+	long_description=read("README.md"),
+	packages=PACKAGES,
+	classifiers=CLASSIFIERS,
+	zip_safe=False,
+	install_requires=INSTALL_REQUIRES,
+)
