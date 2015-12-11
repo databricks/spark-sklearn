@@ -11,7 +11,6 @@ else:
     import unittest
 
 import numpy as np
-import pandas
 import scipy
 from scipy.sparse import csr_matrix
 
@@ -28,10 +27,8 @@ from sklearn import svm, grid_search, datasets
 from pyspark import SparkContext
 from pyspark.ml import Pipeline
 from pyspark.ml.classification import LogisticRegression, LogisticRegressionModel
-from pyspark.ml.evaluation import RegressionEvaluator
 from pyspark.ml.feature import HashingTF, Tokenizer
 from pyspark.ml.regression import LinearRegression, LinearRegressionModel
-from pyspark.ml.tuning import ParamGridBuilder, CrossValidator
 from pyspark.mllib.linalg import Vectors
 from pyspark.sql import SQLContext
 
@@ -214,6 +211,7 @@ class CVTests(MLlibTestCase):
             pass # assert(gs.)
 
     def test_cv_lasso_with_mllib_featurization(self):
+        assert False
         data = [('hi there', 0.0),
                 ('what is up', 1.0),
                 ('huh', 1.0),
@@ -251,126 +249,6 @@ class CVTests(MLlibTestCase):
         # TODO
         for gs in skl_gs.grid_scores_:
             pass # assert(gs.)
-
-    @unittest.skip("demo, disabled because it requires some specific files from Joseph")
-    def test_demo(self):
-        print "\n========================"
-        print "DEMO PART 1"
-        print "========================\n"
-        trainFilepath = "/Users/josephkb/Desktop/demotest"
-        data = self.sql.read.format("json").load(trainFilepath)
-        df = data.toPandas()
-        print "%d reviews" % len(df)
-
-        reviews = df.review.values
-        ratings = df.rating.values
-        # Train scikit-learn model
-        pipeline = SKL_Pipeline([
-            ('vect', SKL_HashingVectorizer(n_features=100)),
-            ('tfidf', SKL_TfidfTransformer(use_idf=False)),
-            ('lasso', SKL_Lasso(max_iter=2)),
-        ])
-        parameters = {
-            'lasso__alpha': (0.001, 0.005, 0.01)
-        }
-
-        nfolds = 3
-
-        grid_search = SKL_GridSearchCV(pipeline, parameters, cv=nfolds)
-        grid_search.fit(reviews, ratings)
-        print("Best (training) R^2 score: %g" % grid_search.best_score_)
-        pipeline = grid_search.best_estimator_
-
-        r2 = pipeline.score(reviews, ratings)
-        print "Training data R^2 score: %g" % r2
-
-        test = self.sql.read.format("json").load(trainFilepath).toPandas()
-        r2 = pipeline.score(test.review.values, test.rating.values)
-        print "Test data R^2 score: %g" % r2
-
-        predictions = pipeline.predict(test.review.values)
-        pdPredictions = pandas.DataFrame(predictions)
-        sparkPredictions = self.sql.createDataFrame(pdPredictions)
-        print "sparkPredictions.count(): %d" % sparkPredictions.count()
-
-        print "\n========================"
-        print "DEMO PART 2"
-        print "========================\n"
-
-        grid_search = GridSearchCV(self.sc, pipeline, parameters, cv=nfolds)
-        grid_search.fit(reviews, ratings)
-        grid_search = grid_search.sklearn_model_
-        print("Best (training) R^2 score: %g" % grid_search.best_score_)
-        pipeline = grid_search.best_estimator_
-
-        r2 = pipeline.score(reviews, ratings)
-        print "Training data R^2 score: %g" % r2
-
-        test = self.sql.read.format("json").load(trainFilepath).toPandas()
-        r2 = pipeline.score(test.review.values, test.rating.values)
-        print "Test data R^2 score: %g" % r2
-
-        predictions = pipeline.predict(test.review.values)
-        pdPredictions = pandas.DataFrame(predictions)
-        sparkPredictions = self.sql.createDataFrame(pdPredictions)
-        print "sparkPredictions.count(): %d" % sparkPredictions.count()
-
-        print "\n========================"
-        print "DEMO PART 3"
-        print "========================\n"
-
-        print "%d reviews" % data.count()
-
-        # Define a pipeline combining text feature extractors
-        tokenizer = Tokenizer(inputCol="review", outputCol="words")
-        hashingTF = HashingTF(inputCol="words", outputCol="features", numFeatures=100)
-        pipeline = Pipeline(stages=[tokenizer, hashingTF])
-        data2 = pipeline.fit(data).transform(data)
-
-        df = self.converter.toPandas(data2.select(data2.features.alias("review"), "rating"))
-
-        reviews = self.converter.toScipy(df.review.values)
-        ratings = df.rating.values
-
-        pipeline = SKL_Pipeline([
-            ('lasso', SKL_Lasso(max_iter=2)),
-        ])
-
-        grid_search = GridSearchCV(self.sc, pipeline, parameters, cv=nfolds)
-        grid_search.fit(reviews, ratings)
-        grid_search = grid_search.sklearn_model_
-        print("Best (training) R^2 score: %g" % grid_search.best_score_)
-        pipeline = grid_search.best_estimator_
-
-        r2 = pipeline.score(reviews, ratings)
-        print "Training data R^2 score: %g" % r2
-
-        # Skip testing for this part of demo
-
-        print "\n========================"
-        print "DEMO PART 4"
-        print "========================\n"
-
-        # Define a pipeline combining a text feature extractor with a simple regressor
-        tokenizer = Tokenizer(inputCol="review", outputCol="words")
-        hashingTF = HashingTF(inputCol="words", outputCol="features", numFeatures=100)
-        lasso = LinearRegression(labelCol="rating", elasticNetParam=1.0, maxIter=2)
-        pipeline = Pipeline(stages=[tokenizer, hashingTF, lasso])
-
-        paramGrid = ParamGridBuilder() \
-            .addGrid(lasso.regParam, [0.001, 0.005, 0.01]) \
-            .build()
-
-        evaluator = RegressionEvaluator(labelCol="rating", metricName="r2")
-
-        cv = CrossValidator(estimator=pipeline, evaluator=evaluator, estimatorParamMaps=paramGrid)
-
-        cvModel = cv.fit(data)
-
-        test = self.sql.read.format("json").load(trainFilepath)
-        r2 = evaluator.evaluate(cvModel.transform(test))
-        print "Test data R^2 score: %g" % r2
-
 
 if __name__ == "__main__":
     unittest.main()
