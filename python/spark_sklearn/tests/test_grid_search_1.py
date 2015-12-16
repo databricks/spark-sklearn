@@ -2,27 +2,24 @@ import unittest
 
 import sklearn.grid_search
 
-from pyspark import SparkContext
-
-from pdspark import GridSearchCV2
+from spark_sklearn import GridSearchCV
+from spark_sklearn.test_utils import create_sc
 # Overwrite the sklearn GridSearch in this suite so that we can run the same tests with the same
 # parameters.
 
-def create_sc():
-  return SparkContext('local[1]', "spark-sklearn tests")
-
 sc = create_sc()
 
-class SPGridSearchWrapper(GridSearchCV2):
+class SPGridSearchWrapper(GridSearchCV):
 
   def __init__(self, estimator, param_grid, scoring=None, fit_params=None,
                  n_jobs=1, iid=True, refit=True, cv=None, verbose=0,
                  pre_dispatch='2*n_jobs', error_score='raise'):
-    super(SPGridSearchWrapper, self).__init__(sc, estimator, param_grid, scoring, fit_params, n_jobs, iid,
-            refit, cv, verbose, pre_dispatch, error_score)
+    super(SPGridSearchWrapper, self).__init__(sc, estimator, param_grid, scoring, fit_params,
+            n_jobs, iid, refit, cv, verbose, pre_dispatch, error_score)
 
 SKGridSearchCV = sklearn.grid_search.GridSearchCV
 sklearn.grid_search.GridSearchCV = SPGridSearchWrapper
+sklearn.grid_search.GridSearchCV_original = SKGridSearchCV
 from sklearn.tests import test_grid_search
 
 # These methods do not raise ValueError but something different
