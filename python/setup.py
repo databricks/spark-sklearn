@@ -48,6 +48,5 @@ setup(
 	packages=PACKAGES,
 	classifiers=CLASSIFIERS,
 	zip_safe=False,
-	install_requires=INSTALL_REQUIRES,
-	test_suite = 'nose.collector'
+	install_requires=INSTALL_REQUIRES
 )
