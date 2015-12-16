@@ -4,7 +4,7 @@ import os
 from setuptools import setup
 # See this web page for explanations:
 # https://hynek.me/articles/sharing-your-labor-of-love-pypi-quick-and-dirty/
-PACKAGES = ["pdspark"]
+PACKAGES = ["spark_sklearn"]
 KEYWORDS = ["spark", "scikit-learn", "distributed computing", "machine learning"]
 CLASSIFIERS = [
 	"Programming Language :: Python :: 2.6",
@@ -21,7 +21,8 @@ CLASSIFIERS = [
 ]
 INSTALL_REQUIRES = ["scikit-learn >= 0.17"]
 
-HERE = os.path.abspath(os.path.dirname(__file__) + "/../")
+# Project root
+ROOT = os.path.abspath(os.getcwd() + "/../")
 
 
 def read(*parts):
@@ -29,12 +30,12 @@ def read(*parts):
     Build an absolute path from *parts* and and return the contents of the
     resulting file.  Assume UTF-8 encoding.
     """
-    with codecs.open(os.path.join(HERE, *parts), "rb", "utf-8") as f:
+    with codecs.open(os.path.join(ROOT, *parts), "rb", "utf-8") as f:
         return f.read()
 
 setup(
 	name="spark-sklearn",
-	description="Integrations tools for running scikit-learn on Spark",
+	description="Integration tools for running scikit-learn on Spark",
 	license="Apache 2.0",
 	url="https://github.com/databricks/spark-sklearn",
 	version="0.1.0",
@@ -48,4 +49,5 @@ setup(
 	classifiers=CLASSIFIERS,
 	zip_safe=False,
 	install_requires=INSTALL_REQUIRES,
+	test_suite = 'nose.collector'
 )
