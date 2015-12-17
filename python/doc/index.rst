@@ -13,8 +13,6 @@ Contents:
 
 .. automodule:: spark_sklearn
     :members:
-    :undoc-members:
-    :inherited-members:
     :show-inheritance:
 
 Indices and tables

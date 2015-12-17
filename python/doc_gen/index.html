@@ -61,9 +61,21 @@
 <tt class="descname">toPandas</tt><big>(</big><em>df</em><big>)</big><a class="headerlink" href="#spark_sklearn.Converter.toPandas" title="Permalink to this definition">¶</a></dt>
 <dd><p>This is similar to the Spark DataFrame built-in toPandas() method, but it handles
 MLlib Vector columns differently.  It converts MLlib Vectors into rows of
-scipy.sparse.csr_matrix, which is generally friendlier for PyData tools like scikit-learn.
-:param df: Spark DataFrame
-:return:  Pandas dataframe</p>
+scipy.sparse.csr_matrix, which is generally friendlier for PyData tools like scikit-learn.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Experimental: This will likely be replaced in later releases with improved APIs.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>df</strong> &#8211; Spark DataFrame</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Pandas dataframe</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -86,11 +98,6 @@ Currently, parameters or arguments for training are not copied.</td>
 </tbody>
 </table>
 </dd></dl>
-
-<dl class="method">
-<dt id="spark_sklearn.Converter.toScipy">
-<tt class="descname">toScipy</tt><big>(</big><em>X</em><big>)</big><a class="headerlink" href="#spark_sklearn.Converter.toScipy" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 <dl class="method">
 <dt id="spark_sklearn.Converter.toSpark">
@@ -120,73 +127,6 @@ Currently, parameters or arguments for training are not copied.</td>
 <em class="property">class </em><tt class="descclassname">spark_sklearn.</tt><tt class="descname">CSRVectorUDT</tt><a class="headerlink" href="#spark_sklearn.CSRVectorUDT" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">pyspark.sql.types.UserDefinedType</span></tt></p>
 <p>SQL user-defined type (UDT) for scipy.sparse.csr_matrix (vectors only, not matrices).</p>
-<dl class="method">
-<dt id="spark_sklearn.CSRVectorUDT.deserialize">
-<tt class="descname">deserialize</tt><big>(</big><em>datum</em><big>)</big><a class="headerlink" href="#spark_sklearn.CSRVectorUDT.deserialize" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="spark_sklearn.CSRVectorUDT.fromInternal">
-<tt class="descname">fromInternal</tt><big>(</big><em>obj</em><big>)</big><a class="headerlink" href="#spark_sklearn.CSRVectorUDT.fromInternal" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="classmethod">
-<dt id="spark_sklearn.CSRVectorUDT.fromJson">
-<em class="property">classmethod </em><tt class="descname">fromJson</tt><big>(</big><em>json</em><big>)</big><a class="headerlink" href="#spark_sklearn.CSRVectorUDT.fromJson" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="spark_sklearn.CSRVectorUDT.json">
-<tt class="descname">json</tt><big>(</big><big>)</big><a class="headerlink" href="#spark_sklearn.CSRVectorUDT.json" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="spark_sklearn.CSRVectorUDT.jsonValue">
-<tt class="descname">jsonValue</tt><big>(</big><big>)</big><a class="headerlink" href="#spark_sklearn.CSRVectorUDT.jsonValue" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="classmethod">
-<dt id="spark_sklearn.CSRVectorUDT.module">
-<em class="property">classmethod </em><tt class="descname">module</tt><big>(</big><big>)</big><a class="headerlink" href="#spark_sklearn.CSRVectorUDT.module" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="spark_sklearn.CSRVectorUDT.needConversion">
-<tt class="descname">needConversion</tt><big>(</big><big>)</big><a class="headerlink" href="#spark_sklearn.CSRVectorUDT.needConversion" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="classmethod">
-<dt id="spark_sklearn.CSRVectorUDT.scalaUDT">
-<em class="property">classmethod </em><tt class="descname">scalaUDT</tt><big>(</big><big>)</big><a class="headerlink" href="#spark_sklearn.CSRVectorUDT.scalaUDT" title="Permalink to this definition">¶</a></dt>
-<dd><p>The class name of the paired Scala UDT (could be &#8216;&#8217;, if there
-is no corresponding one).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="spark_sklearn.CSRVectorUDT.serialize">
-<tt class="descname">serialize</tt><big>(</big><em>obj</em><big>)</big><a class="headerlink" href="#spark_sklearn.CSRVectorUDT.serialize" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="spark_sklearn.CSRVectorUDT.simpleString">
-<tt class="descname">simpleString</tt><big>(</big><big>)</big><a class="headerlink" href="#spark_sklearn.CSRVectorUDT.simpleString" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="classmethod">
-<dt id="spark_sklearn.CSRVectorUDT.sqlType">
-<em class="property">classmethod </em><tt class="descname">sqlType</tt><big>(</big><big>)</big><a class="headerlink" href="#spark_sklearn.CSRVectorUDT.sqlType" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="spark_sklearn.CSRVectorUDT.toInternal">
-<tt class="descname">toInternal</tt><big>(</big><em>obj</em><big>)</big><a class="headerlink" href="#spark_sklearn.CSRVectorUDT.toInternal" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="classmethod">
-<dt id="spark_sklearn.CSRVectorUDT.typeName">
-<em class="property">classmethod </em><tt class="descname">typeName</tt><big>(</big><big>)</big><a class="headerlink" href="#spark_sklearn.CSRVectorUDT.typeName" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
 </dd></dl>
 
 <dl class="class">
@@ -244,11 +184,12 @@ If set to &#8216;raise&#8217;, the error is raised. If a numeric value is given,
 FitFailedWarning is raised. This parameter does not affect the refit
 step, which will always raise the error.</dd>
 </dl>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sklearn</span> <span class="kn">import</span> <span class="n">svm</span><span class="p">,</span> <span class="n">grid_search</span><span class="p">,</span> <span class="n">datasets</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sklearn</span> <span class="kn">import</span> <span class="n">svm</span><span class="p">,</span>  <span class="n">datasets</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">spark_sklearn</span> <span class="kn">import</span> <span class="n">GridSearchCV</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">iris</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">load_iris</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;kernel&#39;</span><span class="p">:(</span><span class="s">&#39;linear&#39;</span><span class="p">,</span> <span class="s">&#39;rbf&#39;</span><span class="p">),</span> <span class="s">&#39;C&#39;</span><span class="p">:[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">]}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">svr</span> <span class="o">=</span> <span class="n">svm</span><span class="o">.</span><span class="n">SVC</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">clf</span> <span class="o">=</span> <span class="n">grid_search</span><span class="o">.</span><span class="n">GridSearchCV</span><span class="p">(</span><span class="n">svr</span><span class="p">,</span> <span class="n">parameters</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">clf</span> <span class="o">=</span> <span class="n">GridSearchCV</span><span class="p">(</span><span class="n">svr</span><span class="p">,</span> <span class="n">parameters</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">iris</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">iris</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
 <span class="gp">... </span>                            
 <span class="go">GridSearchCV(cv=None, error_score=...,</span>
@@ -301,19 +242,6 @@ its final evaluation.</dd>
 <dt><tt class="xref py py-func docutils literal"><span class="pre">sklearn.metrics.make_scorer()</span></tt>:</dt>
 <dd>Make a scorer from a performance metric or loss function.</dd>
 </dl>
-<dl class="staticmethod">
-<dt id="spark_sklearn.GridSearchCV.decision_function">
-<em class="property">static </em><tt class="descname">decision_function</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#spark_sklearn.GridSearchCV.decision_function" title="Permalink to this definition">¶</a></dt>
-<dd><p>Call decision_function on the estimator with the best found parameters.</p>
-<p>Only available if <tt class="docutils literal"><span class="pre">refit=True</span></tt> and the underlying estimator supports
-<tt class="docutils literal"><span class="pre">decision_function</span></tt>.</p>
-<dl class="docutils">
-<dt>X <span class="classifier-delimiter">:</span> <span class="classifier">indexable, length n_samples</span></dt>
-<dd>Must fulfill the input assumptions of the
-underlying estimator.</dd>
-</dl>
-</dd></dl>
-
 <dl class="method">
 <dt id="spark_sklearn.GridSearchCV.fit">
 <tt class="descname">fit</tt><big>(</big><em>X</em>, <em>y=None</em><big>)</big><a class="headerlink" href="#spark_sklearn.GridSearchCV.fit" title="Permalink to this definition">¶</a></dt>
@@ -325,121 +253,6 @@ n_features is the number of features.</dd>
 <dt>y <span class="classifier-delimiter">:</span> <span class="classifier">array-like, shape = [n_samples] or [n_samples, n_output], optional</span></dt>
 <dd>Target relative to X for classification or regression;
 None for unsupervised learning.</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="spark_sklearn.GridSearchCV.get_params">
-<tt class="descname">get_params</tt><big>(</big><em>deep=True</em><big>)</big><a class="headerlink" href="#spark_sklearn.GridSearchCV.get_params" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get parameters for this estimator.</p>
-<dl class="docutils">
-<dt>deep: boolean, optional</dt>
-<dd>If True, will return the parameters for this estimator and
-contained subobjects that are estimators.</dd>
-</dl>
-<dl class="docutils">
-<dt>params <span class="classifier-delimiter">:</span> <span class="classifier">mapping of string to any</span></dt>
-<dd>Parameter names mapped to their values.</dd>
-</dl>
-</dd></dl>
-
-<dl class="staticmethod">
-<dt id="spark_sklearn.GridSearchCV.inverse_transform">
-<em class="property">static </em><tt class="descname">inverse_transform</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#spark_sklearn.GridSearchCV.inverse_transform" title="Permalink to this definition">¶</a></dt>
-<dd><p>Call inverse_transform on the estimator with the best found parameters.</p>
-<p>Only available if the underlying estimator implements <tt class="docutils literal"><span class="pre">inverse_transform</span></tt> and
-<tt class="docutils literal"><span class="pre">refit=True</span></tt>.</p>
-<dl class="docutils">
-<dt>Xt <span class="classifier-delimiter">:</span> <span class="classifier">indexable, length n_samples</span></dt>
-<dd>Must fulfill the input assumptions of the
-underlying estimator.</dd>
-</dl>
-</dd></dl>
-
-<dl class="staticmethod">
-<dt id="spark_sklearn.GridSearchCV.predict">
-<em class="property">static </em><tt class="descname">predict</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#spark_sklearn.GridSearchCV.predict" title="Permalink to this definition">¶</a></dt>
-<dd><p>Call predict on the estimator with the best found parameters.</p>
-<p>Only available if <tt class="docutils literal"><span class="pre">refit=True</span></tt> and the underlying estimator supports
-<tt class="docutils literal"><span class="pre">predict</span></tt>.</p>
-<dl class="docutils">
-<dt>X <span class="classifier-delimiter">:</span> <span class="classifier">indexable, length n_samples</span></dt>
-<dd>Must fulfill the input assumptions of the
-underlying estimator.</dd>
-</dl>
-</dd></dl>
-
-<dl class="staticmethod">
-<dt id="spark_sklearn.GridSearchCV.predict_log_proba">
-<em class="property">static </em><tt class="descname">predict_log_proba</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#spark_sklearn.GridSearchCV.predict_log_proba" title="Permalink to this definition">¶</a></dt>
-<dd><p>Call predict_log_proba on the estimator with the best found parameters.</p>
-<p>Only available if <tt class="docutils literal"><span class="pre">refit=True</span></tt> and the underlying estimator supports
-<tt class="docutils literal"><span class="pre">predict_log_proba</span></tt>.</p>
-<dl class="docutils">
-<dt>X <span class="classifier-delimiter">:</span> <span class="classifier">indexable, length n_samples</span></dt>
-<dd>Must fulfill the input assumptions of the
-underlying estimator.</dd>
-</dl>
-</dd></dl>
-
-<dl class="staticmethod">
-<dt id="spark_sklearn.GridSearchCV.predict_proba">
-<em class="property">static </em><tt class="descname">predict_proba</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#spark_sklearn.GridSearchCV.predict_proba" title="Permalink to this definition">¶</a></dt>
-<dd><p>Call predict_proba on the estimator with the best found parameters.</p>
-<p>Only available if <tt class="docutils literal"><span class="pre">refit=True</span></tt> and the underlying estimator supports
-<tt class="docutils literal"><span class="pre">predict_proba</span></tt>.</p>
-<dl class="docutils">
-<dt>X <span class="classifier-delimiter">:</span> <span class="classifier">indexable, length n_samples</span></dt>
-<dd>Must fulfill the input assumptions of the
-underlying estimator.</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="spark_sklearn.GridSearchCV.score">
-<tt class="descname">score</tt><big>(</big><em>X</em>, <em>y=None</em><big>)</big><a class="headerlink" href="#spark_sklearn.GridSearchCV.score" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the score on the given data, if the estimator has been refit</p>
-<p>This uses the score defined by <tt class="docutils literal"><span class="pre">scoring</span></tt> where provided, and the
-<tt class="docutils literal"><span class="pre">best_estimator_.score</span></tt> method otherwise.</p>
-<dl class="docutils">
-<dt>X <span class="classifier-delimiter">:</span> <span class="classifier">array-like, shape = [n_samples, n_features]</span></dt>
-<dd>Input data, where n_samples is the number of samples and
-n_features is the number of features.</dd>
-<dt>y <span class="classifier-delimiter">:</span> <span class="classifier">array-like, shape = [n_samples] or [n_samples, n_output], optional</span></dt>
-<dd>Target relative to X for classification or regression;
-None for unsupervised learning.</dd>
-</dl>
-<p>score : float</p>
-<blockquote>
-<div><ul class="simple">
-<li>The long-standing behavior of this method changed in version 0.16.</li>
-<li>It no longer uses the metric provided by <tt class="docutils literal"><span class="pre">estimator.score</span></tt> if the
-<tt class="docutils literal"><span class="pre">scoring</span></tt> parameter was set when fitting.</li>
-</ul>
-</div></blockquote>
-</dd></dl>
-
-<dl class="method">
-<dt id="spark_sklearn.GridSearchCV.set_params">
-<tt class="descname">set_params</tt><big>(</big><em>**params</em><big>)</big><a class="headerlink" href="#spark_sklearn.GridSearchCV.set_params" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set the parameters of this estimator.</p>
-<p>The method works on simple estimators as well as on nested objects
-(such as pipelines). The former have parameters of the form
-<tt class="docutils literal"><span class="pre">&lt;component&gt;__&lt;parameter&gt;</span></tt> so that it&#8217;s possible to update each
-component of a nested object.</p>
-<p>self</p>
-</dd></dl>
-
-<dl class="staticmethod">
-<dt id="spark_sklearn.GridSearchCV.transform">
-<em class="property">static </em><tt class="descname">transform</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#spark_sklearn.GridSearchCV.transform" title="Permalink to this definition">¶</a></dt>
-<dd><p>Call transform on the estimator with the best found parameters.</p>
-<p>Only available if the underlying estimator supports <tt class="docutils literal"><span class="pre">transform</span></tt> and
-<tt class="docutils literal"><span class="pre">refit=True</span></tt>.</p>
-<dl class="docutils">
-<dt>X <span class="classifier-delimiter">:</span> <span class="classifier">indexable, length n_samples</span></dt>
-<dd>Must fulfill the input assumptions of the
-underlying estimator.</dd>
 </dl>
 </dd></dl>
 
