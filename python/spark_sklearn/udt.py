@@ -8,6 +8,8 @@ from pyspark.sql.types import ByteType, IntegerType, ArrayType, DoubleType, \
 class CSRVectorUDT(UserDefinedType):
     """
     SQL user-defined type (UDT) for scipy.sparse.csr_matrix (vectors only, not matrices).
+
+     .. note:: Experimental
     """
 
     @classmethod

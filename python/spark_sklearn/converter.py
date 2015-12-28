@@ -128,6 +128,9 @@ class Converter(object):
         This is similar to the Spark DataFrame built-in toPandas() method, but it handles
         MLlib Vector columns differently.  It converts MLlib Vectors into rows of
         scipy.sparse.csr_matrix, which is generally friendlier for PyData tools like scikit-learn.
+
+        .. note:: Experimental: This will likely be replaced in later releases with improved APIs.
+
         :param df: Spark DataFrame
         :return:  Pandas dataframe
         """
@@ -152,12 +155,3 @@ class Converter(object):
             else:
                 cols[i] = df[c]
         return df.select(*cols).toPandas()
-
-    def toScipy(self, X):
-        if isinstance(X, np.ndarray) and len(X) > 0 and \
-                isinstance(X[0], csr_matrix) and X[0].shape[0] == 1:
-            # concatenate rows into a single csr_matrix
-            return scipy.sparse.vstack(X).tocsr()
-        else:
-            raise TypeError("Converter.toScipy expected numpy.ndarray of"
-                            " scipy.sparse.csr.csr_matrix instances, but found: %s" % type(X))

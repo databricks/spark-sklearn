@@ -56,6 +56,10 @@ clf.fit(iris.data, iris.target)
 
 This classifier can be used as a drop-in replacement for any scikit-learn classifier, with the same API.
 
+## Documentation
+
+More extensive documentation (generated with Sphinx) is available in the `python/doc_gen/index.html` file.
+
 ## Changelog
 
 - 2015-12-10 First public release (0.1)

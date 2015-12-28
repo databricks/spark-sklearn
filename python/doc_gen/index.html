@@ -1,0 +1,328 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Welcome to spark_sklearn’s documentation! &mdash; spark_sklearn 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="spark_sklearn 0.1.0 documentation" href="#" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="#">spark_sklearn 0.1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="welcome-to-spark-sklearn-s-documentation">
+<h1>Welcome to spark_sklearn&#8217;s documentation!<a class="headerlink" href="#welcome-to-spark-sklearn-s-documentation" title="Permalink to this headline">¶</a></h1>
+<p>Contents:</p>
+<div class="toctree-wrapper compound">
+<ul class="simple">
+</ul>
+</div>
+<span class="target" id="module-spark_sklearn"></span><dl class="class">
+<dt id="spark_sklearn.Converter">
+<em class="property">class </em><tt class="descclassname">spark_sklearn.</tt><tt class="descname">Converter</tt><big>(</big><em>sc</em><big>)</big><a class="headerlink" href="#spark_sklearn.Converter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Class for converting between scikit-learn and Spark ML models</p>
+<dl class="method">
+<dt id="spark_sklearn.Converter.toPandas">
+<tt class="descname">toPandas</tt><big>(</big><em>df</em><big>)</big><a class="headerlink" href="#spark_sklearn.Converter.toPandas" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is similar to the Spark DataFrame built-in toPandas() method, but it handles
+MLlib Vector columns differently.  It converts MLlib Vectors into rows of
+scipy.sparse.csr_matrix, which is generally friendlier for PyData tools like scikit-learn.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Experimental: This will likely be replaced in later releases with improved APIs.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>df</strong> &#8211; Spark DataFrame</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Pandas dataframe</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="spark_sklearn.Converter.toSKLearn">
+<tt class="descname">toSKLearn</tt><big>(</big><em>model</em><big>)</big><a class="headerlink" href="#spark_sklearn.Converter.toSKLearn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a Spark MLlib model from the Pipelines API (spark.ml) to a scikit-learn model.
+Currently supported models:</p>
+<blockquote>
+<div>pyspark.ml.classification.LogisticRegressionModel
+pyspark.ml.regression.LinearRegressionModel</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>model</strong> &#8211; Spark ML model</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">scikit-learn model with equivalent predictive behavior.
+Currently, parameters or arguments for training are not copied.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="spark_sklearn.Converter.toSpark">
+<tt class="descname">toSpark</tt><big>(</big><em>model</em><big>)</big><a class="headerlink" href="#spark_sklearn.Converter.toSpark" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a scikit-learn model to a Spark ML model from the Pipelines API (spark.ml).
+Currently supported models:</p>
+<blockquote>
+<div>sklearn.linear_model.LogisticRegression (binary classification only, not multiclass)
+sklearn.linear_model.LinearRegression</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>model</strong> &#8211; scikit-learn model</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Spark ML model with equivalent predictive behavior.
+Currently, parameters or arguments for training are not copied.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="spark_sklearn.CSRVectorUDT">
+<em class="property">class </em><tt class="descclassname">spark_sklearn.</tt><tt class="descname">CSRVectorUDT</tt><a class="headerlink" href="#spark_sklearn.CSRVectorUDT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">pyspark.sql.types.UserDefinedType</span></tt></p>
+<p>SQL user-defined type (UDT) for scipy.sparse.csr_matrix (vectors only, not matrices).</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Experimental</p>
+</div>
+</div></blockquote>
+</dd></dl>
+
+<dl class="class">
+<dt id="spark_sklearn.GridSearchCV">
+<em class="property">class </em><tt class="descclassname">spark_sklearn.</tt><tt class="descname">GridSearchCV</tt><big>(</big><em>sc</em>, <em>estimator</em>, <em>param_grid</em>, <em>scoring=None</em>, <em>fit_params=None</em>, <em>n_jobs=1</em>, <em>iid=True</em>, <em>refit=True</em>, <em>cv=None</em>, <em>verbose=0</em>, <em>pre_dispatch='2*n_jobs'</em>, <em>error_score='raise'</em><big>)</big><a class="headerlink" href="#spark_sklearn.GridSearchCV" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">sklearn.grid_search.BaseSearchCV</span></tt></p>
+<p>Exhaustive search over specified parameter values for an estimator, using Spark to
+distribute the computations.</p>
+<p>Important members are fit, predict.</p>
+<p>GridSearchCV implements a &#8220;fit&#8221; method and a &#8220;predict&#8221; method like
+any classifier except that the parameters of the classifier
+used to predict is optimized by cross-validation.</p>
+<p>sc: the spark context</p>
+<dl class="docutils">
+<dt>estimator <span class="classifier-delimiter">:</span> <span class="classifier">object type that implements the &#8220;fit&#8221; and &#8220;predict&#8221; methods</span></dt>
+<dd>A object of that type is instantiated for each grid point.</dd>
+<dt>param_grid <span class="classifier-delimiter">:</span> <span class="classifier">dict or list of dictionaries</span></dt>
+<dd>Dictionary with parameters names (string) as keys and lists of
+parameter settings to try as values, or a list of such
+dictionaries, in which case the grids spanned by each dictionary
+in the list are explored. This enables searching over any sequence
+of parameter settings.</dd>
+<dt>scoring <span class="classifier-delimiter">:</span> <span class="classifier">string, callable or None, optional, default: None</span></dt>
+<dd>A string (see model evaluation documentation) or
+a scorer callable object / function with signature
+<tt class="docutils literal"><span class="pre">scorer(estimator,</span> <span class="pre">X,</span> <span class="pre">y)</span></tt>.</dd>
+<dt>fit_params <span class="classifier-delimiter">:</span> <span class="classifier">dict, optional</span></dt>
+<dd>Parameters to pass to the fit method.</dd>
+<dt>n_jobs <span class="classifier-delimiter">:</span> <span class="classifier">int, default 1</span></dt>
+<dd>This parameter is not used and kept for compatibility.</dd>
+<dt>pre_dispatch <span class="classifier-delimiter">:</span> <span class="classifier">int, or string, optional</span></dt>
+<dd>This parameter is not used and kept for compatibility.</dd>
+<dt>iid <span class="classifier-delimiter">:</span> <span class="classifier">boolean, default=True</span></dt>
+<dd>If True, the data is assumed to be identically distributed across
+the folds, and the loss minimized is the total loss per sample,
+and not the mean loss across the folds.</dd>
+<dt>cv <span class="classifier-delimiter">:</span> <span class="classifier">integer or cross-validation generator, default=3</span></dt>
+<dd>A cross-validation generator to use. If int, determines
+the number of folds in StratifiedKFold if estimator is a classifier
+and the target y is binary or multiclass, or the number
+of folds in KFold otherwise.
+Specific cross-validation objects can be passed, see
+sklearn.cross_validation module for the list of possible objects.</dd>
+<dt>refit <span class="classifier-delimiter">:</span> <span class="classifier">boolean, default=True</span></dt>
+<dd><p class="first">Refit the best estimator with the entire dataset.
+If &#8220;False&#8221;, it is impossible to make predictions using
+this GridSearchCV instance after fitting.</p>
+<p class="last">The refitting step, if any, happens on the local machine.</p>
+</dd>
+<dt>verbose <span class="classifier-delimiter">:</span> <span class="classifier">integer</span></dt>
+<dd>Controls the verbosity: the higher, the more messages.</dd>
+<dt>error_score <span class="classifier-delimiter">:</span> <span class="classifier">&#8216;raise&#8217; (default) or numeric</span></dt>
+<dd>Value to assign to the score if an error occurs in estimator fitting.
+If set to &#8216;raise&#8217;, the error is raised. If a numeric value is given,
+FitFailedWarning is raised. This parameter does not affect the refit
+step, which will always raise the error.</dd>
+</dl>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sklearn</span> <span class="kn">import</span> <span class="n">svm</span><span class="p">,</span>  <span class="n">datasets</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">spark_sklearn</span> <span class="kn">import</span> <span class="n">GridSearchCV</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iris</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">load_iris</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;kernel&#39;</span><span class="p">:(</span><span class="s">&#39;linear&#39;</span><span class="p">,</span> <span class="s">&#39;rbf&#39;</span><span class="p">),</span> <span class="s">&#39;C&#39;</span><span class="p">:[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">]}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">svr</span> <span class="o">=</span> <span class="n">svm</span><span class="o">.</span><span class="n">SVC</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">clf</span> <span class="o">=</span> <span class="n">GridSearchCV</span><span class="p">(</span><span class="n">svr</span><span class="p">,</span> <span class="n">parameters</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">iris</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">iris</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+<span class="gp">... </span>                            
+<span class="go">GridSearchCV(cv=None, error_score=...,</span>
+<span class="go">       estimator=SVC(C=1.0, cache_size=..., class_weight=..., coef0=...,</span>
+<span class="go">                     decision_function_shape=None, degree=..., gamma=...,</span>
+<span class="go">                     kernel=&#39;rbf&#39;, max_iter=-1, probability=False,</span>
+<span class="go">                     random_state=None, shrinking=True, tol=...,</span>
+<span class="go">                     verbose=False),</span>
+<span class="go">       fit_params={}, iid=..., n_jobs=1,</span>
+<span class="go">       param_grid=..., pre_dispatch=..., refit=...,</span>
+<span class="go">       scoring=..., verbose=...)</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt><a href="#id1"><span class="problematic" id="id2">grid_scores_</span></a> <span class="classifier-delimiter">:</span> <span class="classifier">list of named tuples</span></dt>
+<dd><p class="first">Contains scores for all parameter combinations in param_grid.
+Each entry corresponds to one parameter setting.
+Each named tuple has the attributes:</p>
+<blockquote class="last">
+<div><ul class="simple">
+<li><tt class="docutils literal"><span class="pre">parameters</span></tt>, a dict of parameter settings</li>
+<li><tt class="docutils literal"><span class="pre">mean_validation_score</span></tt>, the mean score over the
+cross-validation folds</li>
+<li><tt class="docutils literal"><span class="pre">cv_validation_scores</span></tt>, the list of scores for each fold</li>
+</ul>
+</div></blockquote>
+</dd>
+<dt><a href="#id3"><span class="problematic" id="id4">best_estimator_</span></a> <span class="classifier-delimiter">:</span> <span class="classifier">estimator</span></dt>
+<dd>Estimator that was chosen by the search, i.e. estimator
+which gave highest score (or smallest loss if specified)
+on the left out data. Not available if refit=False.</dd>
+<dt><a href="#id5"><span class="problematic" id="id6">best_score_</span></a> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>Score of best_estimator on the left out data.</dd>
+<dt><a href="#id7"><span class="problematic" id="id8">best_params_</span></a> <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd>Parameter setting that gave the best results on the hold out data.</dd>
+<dt><a href="#id9"><span class="problematic" id="id10">scorer_</span></a> <span class="classifier-delimiter">:</span> <span class="classifier">function</span></dt>
+<dd>Scorer function used on the held out data to choose the best
+parameters for the model.</dd>
+</dl>
+<p>The parameters selected are those that maximize the score of the left out
+data, unless an explicit score is passed in which case it is used instead.</p>
+<p>The parameters n_jobs and pre_dispatch are accepted but not used.</p>
+<dl class="docutils">
+<dt><tt class="xref py py-class docutils literal"><span class="pre">ParameterGrid</span></tt>:</dt>
+<dd>generates all the combinations of a an hyperparameter grid.</dd>
+<dt><tt class="xref py py-func docutils literal"><span class="pre">sklearn.cross_validation.train_test_split()</span></tt>:</dt>
+<dd>utility function to split the data into a development set usable
+for fitting a GridSearchCV instance and an evaluation set for
+its final evaluation.</dd>
+<dt><tt class="xref py py-func docutils literal"><span class="pre">sklearn.metrics.make_scorer()</span></tt>:</dt>
+<dd>Make a scorer from a performance metric or loss function.</dd>
+</dl>
+<dl class="method">
+<dt id="spark_sklearn.GridSearchCV.fit">
+<tt class="descname">fit</tt><big>(</big><em>X</em>, <em>y=None</em><big>)</big><a class="headerlink" href="#spark_sklearn.GridSearchCV.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run fit with all sets of parameters.</p>
+<dl class="docutils">
+<dt>X <span class="classifier-delimiter">:</span> <span class="classifier">array-like, shape = [n_samples, n_features]</span></dt>
+<dd>Training vector, where n_samples is the number of samples and
+n_features is the number of features.</dd>
+<dt>y <span class="classifier-delimiter">:</span> <span class="classifier">array-like, shape = [n_samples] or [n_samples, n_output], optional</span></dt>
+<dd>Target relative to X for classification or regression;
+None for unsupervised learning.</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><em>Index</em></a></li>
+<li><a class="reference internal" href="py-modindex.html"><em>Module Index</em></a></li>
+<li><a class="reference internal" href="search.html"><em>Search Page</em></a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Welcome to spark_sklearn&#8217;s documentation!</a></li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/index.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="#">spark_sklearn 0.1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Joseph Bradley, Tim Hunter.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
