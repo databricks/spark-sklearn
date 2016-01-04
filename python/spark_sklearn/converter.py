@@ -55,8 +55,9 @@ class Converter(object):
         """
         Convert a scikit-learn model to a Spark ML model from the Pipelines API (spark.ml).
         Currently supported models:
-          sklearn.linear_model.LogisticRegression (binary classification only, not multiclass)
-          sklearn.linear_model.LinearRegression
+        - sklearn.linear_model.LogisticRegression (binary classification only, not multiclass)
+        - sklearn.linear_model.LinearRegression
+
         :param model: scikit-learn model
         :return: Spark ML model with equivalent predictive behavior.
                  Currently, parameters or arguments for training are not copied.
@@ -97,8 +98,9 @@ class Converter(object):
         """
         Convert a Spark MLlib model from the Pipelines API (spark.ml) to a scikit-learn model.
         Currently supported models:
-          pyspark.ml.classification.LogisticRegressionModel
-          pyspark.ml.regression.LinearRegressionModel
+        - pyspark.ml.classification.LogisticRegressionModel
+        - pyspark.ml.regression.LinearRegressionModel
+
         :param model: Spark ML model
         :return: scikit-learn model with equivalent predictive behavior.
                  Currently, parameters or arguments for training are not copied.
