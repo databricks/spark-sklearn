@@ -82,9 +82,13 @@ scipy.sparse.csr_matrix, which is generally friendlier for PyData tools like sci
 <dt id="spark_sklearn.Converter.toSKLearn">
 <tt class="descname">toSKLearn</tt><big>(</big><em>model</em><big>)</big><a class="headerlink" href="#spark_sklearn.Converter.toSKLearn" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert a Spark MLlib model from the Pipelines API (spark.ml) to a scikit-learn model.
-Currently supported models:
-- pyspark.ml.classification.LogisticRegressionModel
-- pyspark.ml.regression.LinearRegressionModel</p>
+Currently supported models:</p>
+<blockquote>
+<div><ul class="simple">
+<li>pyspark.ml.classification.LogisticRegressionModel</li>
+<li>pyspark.ml.regression.LinearRegressionModel</li>
+</ul>
+</div></blockquote>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -102,9 +106,13 @@ Currently, parameters or arguments for training are not copied.</td>
 <dt id="spark_sklearn.Converter.toSpark">
 <tt class="descname">toSpark</tt><big>(</big><em>model</em><big>)</big><a class="headerlink" href="#spark_sklearn.Converter.toSpark" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert a scikit-learn model to a Spark ML model from the Pipelines API (spark.ml).
-Currently supported models:
-- sklearn.linear_model.LogisticRegression (binary classification only, not multiclass)
-- sklearn.linear_model.LinearRegression</p>
+Currently supported models:</p>
+<blockquote>
+<div><ul class="simple">
+<li>sklearn.linear_model.LogisticRegression (binary classification only, not multiclass)</li>
+<li>sklearn.linear_model.LinearRegression</li>
+</ul>
+</div></blockquote>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -320,7 +328,7 @@ None for unsupervised learning.</dd>
     </div>
     <div class="footer">
         &copy; Copyright 2015, Joseph Bradley, Tim Hunter.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>
