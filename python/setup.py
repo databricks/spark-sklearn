@@ -22,7 +22,7 @@ CLASSIFIERS = [
 INSTALL_REQUIRES = ["scikit-learn >= 0.17"]
 
 # Project root
-ROOT = os.path.abspath(os.getcwd() + "/../")
+ROOT = os.path.abspath(os.getcwd() + "/")
 
 
 def read(*parts):
@@ -38,7 +38,7 @@ setup(
 	description="Integration tools for running scikit-learn on Spark",
 	license="Apache 2.0",
 	url="https://github.com/databricks/spark-sklearn",
-	version="0.1.0",
+	version="0.1.1",
 	author="Joseph Bradley",
 	author_email="joseph@databricks.com",
 	maintainer="Tim Hunter",
