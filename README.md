@@ -1,6 +1,6 @@
-#Spark-sklearn - scikit-learn integration package for Spark
+#A scikit-learn integration package for Spark
 
-This package contains some tools to integrate the [Spark computing framework](http://spark.apache.org/) with the popular [scikit-learn machine library](http://scikit-learn.org/stable/). Among other tools:
+This package (referred to as spark-sklearn) contains some tools to integrate the [Spark computing framework](http://spark.apache.org/) with the popular [scikit-learn machine library](http://scikit-learn.org/stable/). Among other tools:
  - train and evaluate multiple scikit-learn models in parallel. It is a distributed analog to the [multicore implementation](https://pythonhosted.org/joblib/parallel.html) included by default in [scikit-learn](http://scikit-learn.org/stable/).
  - convert Spark's Dataframes seamlessly into numpy `ndarray`s or sparse matrices.
  - (experimental) distribute Scipy's sparse matrices as a dataset of sparse vectors.
