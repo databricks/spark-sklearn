@@ -1,12 +1,12 @@
 #A scikit-learn integration package for Spark
 
-This package (referred to as spark-sklearn) contains some tools to integrate the [Spark computing framework](http://spark.apache.org/) with the popular [scikit-learn machine library](http://scikit-learn.org/stable/). Among other tools:
+This package contains some tools to integrate the [Spark computing framework](http://spark.apache.org/) with the popular [scikit-learn machine library](http://scikit-learn.org/stable/). Among other tools:
  - train and evaluate multiple scikit-learn models in parallel. It is a distributed analog to the [multicore implementation](https://pythonhosted.org/joblib/parallel.html) included by default in [scikit-learn](http://scikit-learn.org/stable/).
  - convert Spark's Dataframes seamlessly into numpy `ndarray`s or sparse matrices.
  - (experimental) distribute Scipy's sparse matrices as a dataset of sparse vectors.
 
-Spark-sklearn focuses on problems that have a small amount of data and that can be run in parallel.
-- for small datasets, spark-sklearn distributes the search for estimator parameters (`GridSearchCV` in scikit-learn), using Spark,
+It focuses on problems that have a small amount of data and that can be run in parallel.
+- for small datasets, it distributes the search for estimator parameters (`GridSearchCV` in scikit-learn), using Spark,
 - for datasets that do not fit in memory, we recommend using the [distributed implementation in Spark MLlib](https://spark.apache.org/docs/latest/api/python/pyspark.mllib.html).
 
   > NOTE: This package distributes simple tasks like grid-search cross-validation. It does not distribute individual learning algorithms (unlike Spark MLlib).
@@ -20,8 +20,8 @@ This package is released under the Apache 2.0 license. See the LICENSE file.
 ## Installation
 
 This package has the following requirements:
- - a recent version of scikit-learn. Version 0.17 has been tested, older versions may work too.
- - Spark >= 1.5. Spark may be downloaded from the [Spark official website](http://spark.apache.org/). In order to use spark-sklearn, you need to use the pyspark interpreter or another Spark-compliant python interpreter. See the [Spark guide](https://spark.apache.org/docs/latest/programming-guide.html#overview) for more details.
+ - a recent release. Release 0.17 has been tested, older versions may work too.
+ - Spark >= 1.5. Spark may be downloaded from the [Spark official website](http://spark.apache.org/). In order to use this package, you need to use the pyspark interpreter or another Spark-compliant python interpreter. See the [Spark guide](https://spark.apache.org/docs/latest/programming-guide.html#overview) for more details.
  - [nose](https://nose.readthedocs.org) (testing dependency only)
 
 This package is available on PYPI:
@@ -42,7 +42,7 @@ This requires the environment variable `SPARK_HOME` to point to your local copy 
 
 ## Example
 
-Here is a simple example that runs a grid search with Spark. See the [Installation](#Installation) section on how to install spark-sklearn.
+Here is a simple example that runs a grid search with Spark. See the [Installation](#Installation) section on how to install the package.
 
 ```python
 from sklearn import svm, grid_search, datasets
