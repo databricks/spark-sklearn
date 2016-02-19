@@ -50,7 +50,7 @@ from spark_sklearn import GridSearchCV
 iris = datasets.load_iris()
 parameters = {'kernel':('linear', 'rbf'), 'C':[1, 10]}
 svr = svm.SVC()
-clf = GridSearchCV(svr, parameters)
+clf = GridSearchCV(sc, svr, parameters)
 clf.fit(iris.data, iris.target)
 ```
 
