@@ -32,7 +32,7 @@ This project is also available as as [Spark package](http://spark-packages.org/p
 
 If you want to use a developer version, you just need to make sure the `python/` subdirectory is in the `PYTHONPATH` when launching the pyspark interpreter:
 
-	PYTHONPATH=$PYTHONPATH:./python/ $SPARK_HOME/bin/pyspark
+	PYTHONPATH=$PYTHONPATH:./python:$SPARK_HOME/bin/pyspark
 
 __Running tests__ You can directly run tests:
 
