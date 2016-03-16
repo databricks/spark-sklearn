@@ -1,1 +1,2 @@
 # This file should list any python package dependencies.
+scikit-learn==0.17.1
