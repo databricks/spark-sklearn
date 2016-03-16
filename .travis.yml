@@ -15,7 +15,7 @@ before_install:
  - ./bin/download_travis_dependencies.sh
 
 install: 
- - pip install --user -r ./python/requirements.txt
+ - pip install -r ./python/requirements.txt
 
 script:
   - SPARK_HOME=$HOME/.cache/spark-versions/$SPARK_BUILD ./python/run-tests.sh
