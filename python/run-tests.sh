@@ -21,6 +21,9 @@ export PYTHONPATH=$PYTHONPATH:$SPARK_HOME/python:$LIBS:.
 
 export PYTHONPATH=$PYTHONPATH:spark_sklearn
 
+# Use the miniconda environment:
+export PYTHONPATH=$PYTHONPATH:/home/travis/miniconda/envs/test-environment/lib/python2.7/site-packages/
+
 echo "TEST"
 python -c "import scipy.sparse; print scipy.sparse"
 echo "TEST DONE"
