@@ -22,7 +22,7 @@ export PYTHONPATH=$PYTHONPATH:$SPARK_HOME/python:$LIBS:.
 export PYTHONPATH=$PYTHONPATH:spark_sklearn
 
 echo "TEST"
-python -c "import scipy.sparse"
+python -c "import scipy.sparse; print scipy.sparse"
 echo "TEST DONE"
 
 # Return on any failure
