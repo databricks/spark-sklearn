@@ -34,6 +34,9 @@ install:
   # Replace dep1 dep2 ... with your dependencies
   - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION scikit-learn==0.17.0
   - source activate test-environment
+  - python -c "import scipy.sparse"
 
 script:
+  - python -c "import scipy.sparse"
+  - echo "STARTING"
   - SPARK_HOME=$HOME/.cache/spark-versions/$SPARK_BUILD ./python/run-tests.sh
