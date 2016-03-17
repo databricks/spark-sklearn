@@ -11,6 +11,20 @@ for lib in "$SPARK_HOME/python/lib"/*zip ; do
   LIBS=$LIBS:$lib
 done
 
-export PYTHONPATH=$PYTHONPATH:$SPARK_HOME/python$LIBS:.
+# The current directory of the script.
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-nosetests
+#export PYSPARK_SUBMIT_ARGS="--jars pyspark-shell "
+
+export PYTHONPATH=$PYTHONPATH:$SPARK_HOME/python:$LIBS:.
+
+export PYTHONPATH=$PYTHONPATH:spark_sklearn
+
+# Use the miniconda environment:
+export PYTHONPATH=$PYTHONPATH:/home/travis/miniconda/envs/test-environment/lib/python2.7/site-packages/
+
+# Return on any failure
+set -e
+
+# Run test suites
+exec nosetests -v --all-modules -w $DIR
