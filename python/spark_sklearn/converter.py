@@ -16,8 +16,8 @@ from pyspark.ml.regression import LinearRegressionModel
 from pyspark.mllib.linalg import DenseVector, SparseVector, Vectors, VectorUDT
 from pyspark.sql.functions import udf
 
-from udt import CSRVectorUDT
-from util import _new_java_obj, _randomUID
+from spark_sklearn.udt import CSRVectorUDT
+from spark_sklearn.util import _new_java_obj, _randomUID
 
 
 # ClassNames contains 2 corresponding fields:

@@ -1,8 +1,8 @@
 from scipy.sparse import csr_matrix
 
-from converter import Converter
-from grid_search import GridSearchCV
-from udt import CSRVectorUDT
+from spark_sklearn.converter import Converter
+from spark_sklearn.grid_search import GridSearchCV
+from spark_sklearn.udt import CSRVectorUDT
 
 __all__ = ['Converter', 'CSRVectorUDT', 'GridSearchCV']
 
