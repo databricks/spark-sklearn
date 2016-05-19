@@ -11,7 +11,7 @@ It focuses on problems that have a small amount of data and that can be run in p
 
   > NOTE: This package distributes simple tasks like grid-search cross-validation. It does not distribute individual learning algorithms (unlike Spark MLlib).
 
-**Difference with the [sparkit-learn project](https://github.com/lensacom/sparkit-learn)** The sparkit-learn project aims at a comprehensive integration between Spark and scikit-learn. In particular, it adds some primitives to distribute numerical data using Spark, and it reimplements some of the most common algorithms found in scikit-learn. 
+**Difference with the [sparkit-learn project](https://github.com/lensacom/sparkit-learn)** The sparkit-learn project aims at a comprehensive integration between Spark and scikit-learn. In particular, it adds some primitives to distribute numerical data using Spark, and it reimplements some of the most common algorithms found in scikit-learn.
 
 ## License
 
@@ -43,7 +43,7 @@ This requires the environment variable `SPARK_HOME` to point to your local copy 
 
 ## Example
 
-Here is a simple example that runs a grid search with Spark. See the [Installation](#Installation) section on how to install the package.
+Here is a simple example that runs a grid search with Spark. See the [Installation](#installation) section on how to install the package.
 
 ```python
 from sklearn import svm, grid_search, datasets
@@ -68,4 +68,3 @@ More extensive documentation (generated with Sphinx) is available in the `python
 
 - 0.1.2:
   - python 3 support
-
