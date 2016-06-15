@@ -26,5 +26,9 @@ export PYTHONPATH=$PYTHONPATH:/home/travis/miniconda/envs/test-environment/lib/p
 # Return on any failure
 set -e
 
-# Run test suites
-exec nosetests -v --all-modules -w $DIR
+if [ "$#" = 0 ]; then
+    ARGS="--all-modules"
+else
+    ARGS="$@"
+fi
+exec nosetests -v "$ARGS" -w $DIR
