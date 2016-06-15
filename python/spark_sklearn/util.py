@@ -49,7 +49,7 @@ def _randomUID(cls):
     """
     return cls.__name__ + "_" + uuid.uuid4().hex[12:]
 
-@since(2.1)
+@since(2.0)
 def gapply(grouped_data, func, schema, *cols):
     """Applies the function `func` to the grouped data; in particular, by default this calls
     `func(key1, key2, ..., keyn, values)` where the number and order of the key arguments is
@@ -58,7 +58,7 @@ def gapply(grouped_data, func, schema, *cols):
 
     `func` is expected to return a `pandas.DataFrame` of the specified schema `schema`.
 
-    If `sqlContext.getConf("spark.sql.retainGroupColumns")` is not `u'true'`, then `func` is
+    If `spark.conf.get("spark.sql.retainGroupColumns")` is not `u'true'`, then `func` is
     called without any keys.
 
     If no `cols` are specified, then all grouped columns will be offered, in the order of the 
@@ -153,6 +153,7 @@ def gapply(grouped_data, func, schema, *cols):
         keys, collectedCols = args[:-nvals], args[-nvals:]
         valuesDF = pandas.DataFrame.from_dict(
             {colName: colList for colName, colList in zip(cols, collectedCols)})
+        valuesDF = valuesDF[list(cols)] # reorder to cannonical
         outputDF = func(*chain(keys, [valuesDF]))
         # To recover native python types for serialization, we need
         # to convert the pandas dataframe to a numpy array, then to a
