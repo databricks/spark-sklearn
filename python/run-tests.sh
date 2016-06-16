@@ -31,4 +31,4 @@ if [ "$#" = 0 ]; then
 else
     ARGS="$@"
 fi
-exec nosetests -v "$ARGS" -w $DIR
+exec nosetests -v $ARGS -w $DIR
