@@ -6,9 +6,10 @@ from pyspark.mllib.linalg import Vectors
 from pyspark.ml.regression import LinearRegression, LinearRegressionModel
 from pyspark.ml.classification import LogisticRegression, LogisticRegressionModel
 
-from spark_sklearn.test_utils import MLlibTestCase
+from spark_sklearn.test_utils import MLlibTestCase, fixtureReuseSparkSession
 from spark_sklearn import Converter
 
+@fixtureReuseSparkSession
 class ConverterTests(MLlibTestCase):
 
     def setUp(self):
@@ -66,6 +67,7 @@ class ConverterTests(MLlibTestCase):
         self.assertEqual(pd.features[0][0,0], 0.1)
         self.assertEqual(pd.features[0][0,1], 0.2)
 
+@fixtureReuseSparkSession
 class CSRVectorUDTTests(MLlibTestCase):
 
     def test_scipy_sparse(self):
