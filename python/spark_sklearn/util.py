@@ -56,7 +56,8 @@ def gapply(grouped_data, func, schema, *cols):
     determined by columns on which this instance's parent :class:`DataFrame` was grouped and
     `values` is a `pandas.DataFrame` of columns selected by `cols`, in that order.
 
-    `func` is expected to return a `pandas.DataFrame` of the specified schema `schema`.
+    `func` is expected to return a `pandas.DataFrame` of the specified schema `schema`,
+    which should be of type :class:`StructType` (output columns are of this name and order).
 
     If `spark.conf.get("spark.sql.retainGroupColumns")` is not `u'true'`, then `func` is
     called without any keys.
@@ -78,6 +79,7 @@ def gapply(grouped_data, func, schema, *cols):
 
     :raise ValueError: if `*` is in `cols`
     :raise ValueError: if `cols` contains duplicates
+    :raise ValueError: if `schema` is not a :class:`StructType`
     :raise ImportError: if `pandas` module is not installed
     :raise ImportError: if `pandas` version is too old (less than 0.7.1)
 
@@ -143,6 +145,9 @@ def gapply(grouped_data, func, schema, *cols):
     if len(set(cols)) < len(cols):
         raise ValueError("cols expected not to contain duplicate columns")
 
+    if not isinstance(schema, StructType):
+        raise ValueError("output schema should be a StructType")
+
     inputAggDF = grouped_data.agg({col: 'collect_list' for col in cols})
     # Recover canonical order (aggregation may change column order)
     cannonicalOrder = chain(key_cols, (inputAggDF['collect_list(' + col + ')'] for col in cols))
@@ -166,4 +171,5 @@ def gapply(grouped_data, func, schema, *cols):
     outputAggDF = inputAggDF.select(pandasUDF(*inputAggDF))
 
     explodedDF = outputAggDF.select(explode(*outputAggDF).alias("gapply"))
-    return explodedDF.select("gapply.*") # automatically retrieves nested schema column names
+    # automatically retrieves nested schema column names
+    return explodedDF.select("gapply.*")

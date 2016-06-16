@@ -2,7 +2,7 @@
 from itertools import chain
 import pandas as pd
 import random
-from spark_sklearn import test_utils
+from spark_sklearn.test_utils import fixtureReuseSparkSession
 from spark_sklearn.util import gapply
 from pyspark.conf import SparkConf
 from pyspark.sql import SparkSession
@@ -28,25 +28,9 @@ def _assert_frame_equal(actual, expected):
 
 def _emptyFunc(key, vals): return pd.DataFrame.from_records([])
 
+@fixtureReuseSparkSession
 class GapplyTests(unittest.TestCase):
     
-    @classmethod
-    def setUpClass(cls):
-        cls.should_tear_down_sc = test_utils.sc == None
-        cls.spark = SparkSession(test_utils.create_sc())
-        random.seed(1000) # random values for convenience, seed for repeatability
-
-    @classmethod
-    def tearDownClass(cls):
-        if cls.should_tear_down_sc:
-            cls.spark.stop()
-
-    @classmethod
-    def restartSpark(cls, conf=None):
-        cls.spark.stop()
-        test_utils.sc = None
-        cls.spark = SparkSession(test_utils.create_sc(conf=conf))
-
     def test_gapply_empty(self):
         # Implicitly checks that pandas version is large enough (unit tests for the actual version
         # checking itself would require some serious mocking)
@@ -55,6 +39,18 @@ class GapplyTests(unittest.TestCase):
         gd = emptyLongLongDF.groupBy("a")
         self.assertEqual(gapply(gd, _emptyFunc, longLongSchema, "b").collect(), [])
 
+    def test_gapply_empty_schema(self):
+        longLongSchema = StructType().add("a", LongType()).add("b", LongType())
+        emptyLongLongDF = self.spark.createDataFrame([(1, 2)], schema=longLongSchema)
+        gd = emptyLongLongDF.groupBy("a")
+        self.assertEqual(gapply(gd, _emptyFunc, StructType(), "b").collect(), [])
+
+    def test_gapply_raises_if_bad_schema(self):
+        longLongSchema = StructType().add("a", LongType()).add("b", LongType())
+        emptyLongLongDF = self.spark.createDataFrame([], schema=longLongSchema)
+        gd = emptyLongLongDF.groupBy("a")
+        self.assertRaises(ValueError, gapply, gd, _emptyFunc, LongType(), "b")
+        
     def test_gapply_raises_if_bad_cols(self):
         longLongLongSchema = StructType() \
                              .add("a", LongType()).add("b", LongType()).add("c", LongType())
@@ -176,12 +172,28 @@ class GapplyTests(unittest.TestCase):
         actual = gapply(gd, func, schema).toPandas()
         _assert_frame_equal(actual, expected)
 
-    def test_gapply_no_keys(self):
-        conf = SparkConf()
-        conf.set("spark.sql.retainGroupColumns", "false")
-        GapplyTests.restartSpark(conf)
+@fixtureReuseSparkSession
+class GapplyConfTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super(GapplyConfTests, cls).setUpClass()
+        cls.spark = SparkSession.builder \
+                                .master("local") \
+                                .appName("Unit Tests") \
+                                .config("spark.sql.retainGroupColumns", "false") \
+                                .getOrCreate()
 
-        schema = StructType().add("key", LongType()).add("val", LongType())
+    @classmethod
+    def tearDownClass(cls):
+        super(GapplyConfTests, cls).tearDownClass()
+        cls.spark = SparkSession.builder \
+                                .master("local") \
+                                .appName("Unit Tests") \
+                                .config("spark.sql.retainGroupColumns", "true") \
+                                .getOrCreate()
+    
+    def test_gapply_no_keys(self):
+        schema = StructType().add("val", LongType())
         pandasDF = pd.DataFrame.from_dict({
             "key": [random.randrange(GapplyTests.NKEYS) for _ in range(GapplyTests.NROWS)],
             "val": [random.randrange(GapplyTests.NVALS) for _ in range(GapplyTests.NROWS)]})
@@ -191,7 +203,3 @@ class GapplyTests(unittest.TestCase):
         expected = pandasDF.groupby("key", as_index=False).agg({"val": "sum"})[["val"]]
         actual = gapply(gd, func, schema, "val").toPandas()
         _assert_frame_equal(actual, expected)
-        
-        conf = SparkConf()
-        conf.set("spark.sql.retainGroupColumns", "false")
-        GapplyTest.restartSpark(conf)
