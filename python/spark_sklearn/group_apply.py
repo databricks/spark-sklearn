@@ -5,9 +5,10 @@ Method for applying arbitrary UDFs over grouped data.
 from distutils.version import LooseVersion
 from py4j import java_gateway
 from pyspark import SparkContext
-from pyspark.sql.dataframe import DataFrame
+from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.functions import explode, udf
 from pyspark.sql.types import *
+from pyspark.sql.types import Row
 from itertools import chain
 
 def gapply(grouped_data, func, schema, *cols):
@@ -54,33 +55,35 @@ def gapply(grouped_data, func, schema, *cols):
     ...                       Row(course="dotNET", year=2013, earnings=48000),
     ...                       Row(course="Java",   year=2013, earnings=30000)])
     ...     .select("course", "year", "earnings"))
-    DataFrame[course: string, year: bigint, earnings: bigint]
     >>> def yearlyMedian(key, vals):
     ...     all_years = set(vals['year'])
     ...     # Note that interpolation is performed, so we need to cast back to long.
     ...     yearly_median = [(key, year, long(vals['earnings'][vals['year'] == year].median()))
     ...                      for year in all_years]
     ...     return pd.DataFrame.from_records(yearly_median)
-    >>> gapply(df.groupBy("course"), yearlyMedian, df.schema).show()
+    >>> gapply(df.groupBy("course"), yearlyMedian, df.schema).orderBy("earnings").show()
     +------+----+--------+
     |course|year|earnings|
     +------+----+--------+
     |dotNET|2012|    7500|
-    |dotNET|2013|   48000|
     |  Java|2012|   20000|
     |  Java|2013|   30000|
+    |dotNET|2013|   48000|
     +------+----+--------+
+    <BLANKLINE>
     >>> def twoKeyYearlyMedian(course, year, vals):
     ...     return pd.DataFrame.from_records([(course, year, long(vals["earnings"].median()))])
-    >>> gapply(df.groupBy("course", "year"), twoKeyYearlyMedian, df.schema, "earnings").show()
+    >>> gapply(df.groupBy("course", "year"), twoKeyYearlyMedian, df.schema, "earnings") \
+            .orderBy("earnings").show()
     +------+----+--------+
     |course|year|earnings|
     +------+----+--------+
     |dotNET|2012|    7500|
-    |dotNET|2013|   48000|
     |  Java|2012|   20000|
     |  Java|2013|   30000|
+    |dotNET|2013|   48000|
     +------+----+--------+
+    <BLANKLINE>
     """
     import pandas
     minPandasVersion = '0.7.1'
@@ -133,3 +136,18 @@ def gapply(grouped_data, func, schema, *cols):
     explodedDF = outputAggDF.select(explode(*outputAggDF).alias("gapply"))
     # automatically retrieves nested schema column names
     return explodedDF.select("gapply.*")
+
+def _test():
+    import doctest
+    spark = SparkSession.builder \
+        .master("local") \
+        .appName("sql.group tests")\
+        .getOrCreate()
+    sc = spark.sparkContext
+    globs = globals().copy()
+    globs['spark'] = spark
+    doctest.testmod(globs=globs)
+    spark.stop()
+
+if __name__ == "__main__":
+    _test()
