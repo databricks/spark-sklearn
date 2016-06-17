@@ -8,7 +8,7 @@ cache:
     - $HOME/.cache/spark-versions
 env:
   matrix:
-    - SPARK_VERSION="2.0.0-preview" SPARK_BUILD="spark-2.0.0-preview" SPARK_BUILD_URL="http://apache.claz.org/spark/spark-2.0.0-preview/spark-2.0.0-preview.tgz"
+    - SPARK_VERSION="2.0.0-preview" SPARK_BUILD="spark-2.0.0-preview-bin-hadoop2.6" SPARK_BUILD_URL="http://apache.claz.org/spark/spark-2.0.0-preview/spark-2.0.0-preview-bin-hadoop2.6.tgz"
 
 before_install:
  - ./bin/download_travis_dependencies.sh
