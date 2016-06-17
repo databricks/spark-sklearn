@@ -9,6 +9,8 @@ from pyspark.ml.classification import LogisticRegression, LogisticRegressionMode
 from spark_sklearn.test_utils import MLlibTestCase, fixtureReuseSparkSession
 from spark_sklearn import Converter
 
+import unittest
+
 @fixtureReuseSparkSession
 class ConverterTests(MLlibTestCase):
 
@@ -70,6 +72,7 @@ class ConverterTests(MLlibTestCase):
 @fixtureReuseSparkSession
 class CSRVectorUDTTests(MLlibTestCase):
 
+    @unittest.skip("CSR Matrix support not present for Spark 2.0 - see issue #24")
     def test_scipy_sparse(self):
         data = [(self.list2csr([0.1, 0.2]),)]
         df = self.sql.createDataFrame(data, ["features"])
