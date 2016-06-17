@@ -3,7 +3,7 @@ from itertools import chain
 import pandas as pd
 import random
 from spark_sklearn.test_utils import fixtureReuseSparkSession
-from spark_sklearn.util import gapply
+from spark_sklearn.group_apply import gapply
 from pyspark.conf import SparkConf
 from pyspark.sql import SparkSession
 from pyspark.sql.types import *
