@@ -17,7 +17,7 @@ from scipy.sparse import csr_matrix
 
 from pyspark import SparkContext
 from pyspark.sql import SparkSession
-from pyspark.mllib.linalg import Vectors
+from pyspark.ml.linalg import Vectors
 
 # Used as deocrator to have one PySpark SparkSession per fixture.
 def fixtureReuseSparkSession(cls):

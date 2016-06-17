@@ -2,7 +2,7 @@ from scipy.sparse import csr_matrix
 from sklearn.linear_model import LogisticRegression as SKL_LogisticRegression
 from sklearn.linear_model import LinearRegression as SKL_LinearRegression
 
-from pyspark.mllib.linalg import Vectors
+from pyspark.ml.linalg import Vectors
 from pyspark.ml.regression import LinearRegression, LinearRegressionModel
 from pyspark.ml.classification import LogisticRegression, LogisticRegressionModel
 
@@ -20,7 +20,7 @@ class ConverterTests(MLlibTestCase):
         """ Compare weights, intercept of sklearn, Spark GLMs
         """
         skl_weights = Vectors.dense(skl.coef_.flatten())
-        self.assertEqual(skl_weights, spark.weights)
+        self.assertEqual(skl_weights, spark.coefficients)
         self.assertEqual(skl.intercept_, spark.intercept)
 
     def test_LogisticRegression_skl2spark(self):

@@ -4,7 +4,7 @@ import uuid
 from pyspark import SparkContext
 
 # WARNING: These are private Spark APIs.
-from pyspark.mllib.common import _py2java, _java2py
+from pyspark.ml.common import _py2java, _java2py
 
 def _jvm():
     """
