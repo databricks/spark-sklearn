@@ -16,7 +16,7 @@ licenses := Seq("Apache-2.0" -> url("http://opensource.org/licenses/Apache-2.0")
 // Add Spark components this package depends on, e.g, "mllib", ....
 sparkComponents ++= Seq("mllib")
 
-// TODO: remove after Spark 2.0.0 is released:
+// TODO: remove after Spark 2.0.0 release:
 resolvers += "apache-snapshots" at "https://repository.apache.org/snapshots/"
 
 // uncomment and change the value below to change the directory where your zip artifact will be created
