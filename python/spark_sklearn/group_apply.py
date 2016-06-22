@@ -100,7 +100,7 @@ def gapply(grouped_data, func, schema, *cols):
     if not cols:
         # Extract the full column list with the parent df
         javaDFName = "org$apache$spark$sql$RelationalGroupedDataset$$df"
-        parentDF = java_gateway.get_field(grouped_data._jdf, javaDFName)
+        parentDF = java_gateway.get_field(grouped_data._jgd, javaDFName)
         all_cols = DataFrame(parentDF, None).columns
         key_cols_set = set(key_cols)
         cols = [col for col in all_cols if col not in key_cols_set]
