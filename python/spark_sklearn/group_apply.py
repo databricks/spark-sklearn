@@ -12,7 +12,10 @@ from pyspark.sql.types import Row
 from itertools import chain
 
 def gapply(grouped_data, func, schema, *cols):
-    """Applies the function `func` to the grouped data; in particular, by default this calls
+    """WARNING: this function is planned to be migrated to apache/spark for release 2.1. This
+    API will not be maintained.
+
+    Applies the function `func` to the grouped data; in particular, by default this calls
     `func(key1, key2, ..., keyn, values)` where the number and order of the key arguments is
     determined by columns on which this instance's parent :class:`DataFrame` was grouped and
     `values` is a `pandas.DataFrame` of columns selected by `cols`, in that order.
