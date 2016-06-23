@@ -1,6 +1,8 @@
+
 from scipy.sparse import csr_matrix
 from sklearn.linear_model import LogisticRegression as SKL_LogisticRegression
 from sklearn.linear_model import LinearRegression as SKL_LinearRegression
+import unittest
 
 from pyspark.ml.linalg import Vectors
 from pyspark.ml.regression import LinearRegression, LinearRegressionModel
@@ -8,8 +10,6 @@ from pyspark.ml.classification import LogisticRegression, LogisticRegressionMode
 
 from spark_sklearn.test_utils import MLlibTestCase, fixtureReuseSparkSession
 from spark_sklearn import Converter
-
-import unittest
 
 @fixtureReuseSparkSession
 class ConverterTests(MLlibTestCase):

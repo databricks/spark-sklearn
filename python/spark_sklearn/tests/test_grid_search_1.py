@@ -14,6 +14,7 @@ class AllTests(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         super(AllTests, cls).tearDownClass()
+        # Restore sklearn module to the original state after done testing this fixture.
         sklearn.grid_search.GridSearchCV = sklearn.grid_search.GridSearchCV_original
         del sklearn.grid_search.GridSearchCV_original
 

@@ -19,7 +19,10 @@ from pyspark import SparkContext
 from pyspark.sql import SparkSession
 from pyspark.ml.linalg import Vectors
 
-# Used as deocrator to have one PySpark SparkSession per fixture.
+# Used as decorator to wrap around a class deriving from unittest.TestCase. Wraps current
+# unittest methods setUpClass() and tearDownClass(), invoked by the nosetest command before
+# and after unit tests are run. This enables us to create one PySpark SparkSession per
+# test fixture. The session can be referred to with self.spark or ClassName.spark.
 def fixtureReuseSparkSession(cls):
     setup = getattr(cls, 'setUpClass', None)
     teardown = getattr(cls, 'tearDownClass', None)
@@ -29,7 +32,9 @@ def fixtureReuseSparkSession(cls):
     def tearDownClass(cls):
         if cls.spark:
             cls.spark.stop()
-            SparkSession._instantiatedContext = None
+            # Next session will attempt to reuse the previous stopped
+            # SparkContext if it's not cleared.
+            SparkSession._instantiatedContext = None 
         cls.spark = None
         if teardown: teardown()
 
