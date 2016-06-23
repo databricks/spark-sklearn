@@ -23,8 +23,8 @@ class SPGridSearchWrapper(GridSearchCV):
                  n_jobs=1, iid=True, refit=True, cv=None, verbose=0,
                  pre_dispatch='2*n_jobs', error_score='raise'):
       super(SPGridSearchWrapper, self).__init__(AllTests.spark.sparkContext, estimator, param_grid,
-                                                scoring, fit_params, n_jobs, iid, refit, cv, verbose,
-                                                pre_dispatch, error_score)
+                                                scoring, fit_params, n_jobs, iid, refit, cv,
+                                                verbose, pre_dispatch, error_score)
 
     # These methods do not raise ValueError but something different
 _blacklist = set(['test_pickle',

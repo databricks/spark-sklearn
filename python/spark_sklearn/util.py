@@ -32,7 +32,6 @@ def _call_java(sc, java_obj, name, *args):
     Method copied from pyspark.ml.wrapper.  Uses private Spark APIs.
     """
     m = getattr(java_obj, name)
-    sc = _wrap_sc(sc)
     java_args = [_py2java(sc, arg) for arg in args]
     return _java2py(sc, m(*java_args))
 
