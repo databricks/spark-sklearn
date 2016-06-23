@@ -2,7 +2,6 @@
 Some test utilities to create the spark context.
 """
 import sys
-
 if sys.version_info[:2] <= (2, 6):
     try:
         import unittest2 as unittest
@@ -11,7 +10,6 @@ if sys.version_info[:2] <= (2, 6):
         sys.exit(1)
 else:
     import unittest
-
 import numpy as np
 from scipy.sparse import csr_matrix
 

@@ -2,14 +2,16 @@
 from itertools import chain
 import pandas as pd
 import random
-from spark_sklearn.test_utils import fixtureReuseSparkSession
-from spark_sklearn.group_apply import gapply
+import unittest
+
 from pyspark.conf import SparkConf
 from pyspark.sql import SparkSession
 from pyspark.sql.types import *
 from pyspark.sql import Row
 from pyspark.sql.tests import PythonOnlyPoint, PythonOnlyUDT, ExamplePoint, ExamplePointUDT
-import unittest
+
+from spark_sklearn.test_utils import fixtureReuseSparkSession
+from spark_sklearn.group_apply import gapply
 
 def _assert_frame_equal(actual, expected):
     # Points are unhashable, so pandas' assert_frame_equal can't check they're the same by default.

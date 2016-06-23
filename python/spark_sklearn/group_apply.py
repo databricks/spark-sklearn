@@ -3,13 +3,15 @@ Method for applying arbitrary UDFs over grouped data.
 """
 
 from distutils.version import LooseVersion
+from itertools import chain
 from py4j import java_gateway
+
 from pyspark import SparkContext
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.functions import explode, udf
 from pyspark.sql.types import *
 from pyspark.sql.types import Row
-from itertools import chain
+
 
 def gapply(grouped_data, func, schema, *cols):
     """WARNING: this function is planned to be migrated to apache/spark for release 2.1. This
