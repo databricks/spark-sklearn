@@ -1,13 +1,15 @@
+"""
+Method for applying arbitrary UDFs over grouped data.
+"""
 
 from distutils.version import LooseVersion
 from py4j import java_gateway
-from pyspark import SparkContext, since
+from pyspark import SparkContext
 from pyspark.sql.dataframe import DataFrame
 from pyspark.sql.functions import explode, udf
 from pyspark.sql.types import *
 from itertools import chain
 
-@since(2.0)
 def gapply(grouped_data, func, schema, *cols):
     """Applies the function `func` to the grouped data; in particular, by default this calls
     `func(key1, key2, ..., keyn, values)` where the number and order of the key arguments is
@@ -45,13 +47,13 @@ def gapply(grouped_data, func, schema, *cols):
     returned data frames.
 
     >>> import pandas as pd
-    >>> df = spark \
-    ...          .createDataFrame([Row(course="dotNET", year=2012, earnings=10000),
-    ...                            Row(course="Java",   year=2012, earnings=20000),
-    ...                            Row(course="dotNET", year=2012, earnings=5000),
-    ...                            Row(course="dotNET", year=2013, earnings=48000),
-    ...                            Row(course="Java",   year=2013, earnings=30000)]) \
-    ...          .select("course", "year", "earnings")
+    >>> df = (spark
+    ...     .createDataFrame([Row(course="dotNET", year=2012, earnings=10000),
+    ...                       Row(course="Java",   year=2012, earnings=20000),
+    ...                       Row(course="dotNET", year=2012, earnings=5000),
+    ...                       Row(course="dotNET", year=2013, earnings=48000),
+    ...                       Row(course="Java",   year=2013, earnings=30000)])
+    ...     .select("course", "year", "earnings"))
     DataFrame[course: string, year: bigint, earnings: bigint]
     >>> def yearlyMedian(key, vals):
     ...     all_years = set(vals['year'])
