@@ -186,6 +186,9 @@ class GapplyConfTests(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         super(GapplyConfTests, cls).tearDownClass()
+        # Creating a new SparkSession here seems confusing, but it is necessary because
+        # the config is (for some stupid reason...) cached, which would make it get in
+        # the way of other tests that expect a default configuration.
         cls.spark = SparkSession.builder \
                                 .master("local") \
                                 .appName("Unit Tests") \
