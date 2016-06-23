@@ -1,14 +1,17 @@
+
 from scipy.sparse import csr_matrix
 from sklearn.linear_model import LogisticRegression as SKL_LogisticRegression
 from sklearn.linear_model import LinearRegression as SKL_LinearRegression
+import unittest
 
-from pyspark.mllib.linalg import Vectors
+from pyspark.ml.linalg import Vectors
 from pyspark.ml.regression import LinearRegression, LinearRegressionModel
 from pyspark.ml.classification import LogisticRegression, LogisticRegressionModel
 
-from spark_sklearn.test_utils import MLlibTestCase
+from spark_sklearn.test_utils import MLlibTestCase, fixtureReuseSparkSession
 from spark_sklearn import Converter
 
+@fixtureReuseSparkSession
 class ConverterTests(MLlibTestCase):
 
     def setUp(self):
@@ -19,7 +22,7 @@ class ConverterTests(MLlibTestCase):
         """ Compare weights, intercept of sklearn, Spark GLMs
         """
         skl_weights = Vectors.dense(skl.coef_.flatten())
-        self.assertEqual(skl_weights, spark.weights)
+        self.assertEqual(skl_weights, spark.coefficients)
         self.assertEqual(skl.intercept_, spark.intercept)
 
     def test_LogisticRegression_skl2spark(self):
@@ -66,8 +69,10 @@ class ConverterTests(MLlibTestCase):
         self.assertEqual(pd.features[0][0,0], 0.1)
         self.assertEqual(pd.features[0][0,1], 0.2)
 
+@fixtureReuseSparkSession
 class CSRVectorUDTTests(MLlibTestCase):
 
+    @unittest.skip("CSR Matrix support not present for Spark 2.0 - see issue #24")
     def test_scipy_sparse(self):
         data = [(self.list2csr([0.1, 0.2]),)]
         df = self.sql.createDataFrame(data, ["features"])

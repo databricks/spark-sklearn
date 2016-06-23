@@ -19,17 +19,17 @@ This package is released under the Apache 2.0 license. See the LICENSE file.
 
 ## Installation
 
-This package has the following requirements:
- - a recent release of scikit-learn. Release 0.17 has been tested, older versions may work too.
- - Spark >= 1.5. Spark may be downloaded from the [Spark official website](http://spark.apache.org/). In order to use this package, you need to use the pyspark interpreter or another Spark-compliant python interpreter. See the [Spark guide](https://spark.apache.org/docs/latest/programming-guide.html#overview) for more details.
- - [nose](https://nose.readthedocs.org) (testing dependency only)
- - Pandas, if using the Pandas integration. Pandas==0.18 has been tested.
-
 This package is available on PYPI:
 
 	pip install spark-sklearn
 
 This project is also available as as [Spark package](http://spark-packages.org/package/databricks/spark-sklearn).
+
+The developer version has the following requirements:
+ - a recent release of scikit-learn. Release 0.17 has been tested, older versions may work too.
+ - Spark >= 2.0. Spark may be downloaded from the [Spark official website](http://spark.apache.org/). In order to use this package, you need to use the pyspark interpreter or another Spark-compliant python interpreter. See the [Spark guide](https://spark.apache.org/docs/latest/programming-guide.html#overview) for more details. NOTICE: currently, this package uses the nightly 2.0.0 snapshot, available [here](http://people.apache.org/~pwendell/spark-nightly/spark-branch-2.0-bin/latest/) (TODO: remove reference after 2.0.0 release).
+ - [nose](https://nose.readthedocs.org) (testing dependency only)
+ - Pandas, if using the Pandas integration or testing. Pandas==0.18 has been tested.
 
 If you want to use a developer version, you just need to make sure the `python/` subdirectory is in the `PYTHONPATH` when launching the pyspark interpreter:
 

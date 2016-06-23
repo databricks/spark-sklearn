@@ -4,7 +4,7 @@ import uuid
 from pyspark import SparkContext
 
 # WARNING: These are private Spark APIs.
-from pyspark.mllib.common import _py2java, _java2py
+from pyspark.ml.common import _py2java, _java2py
 
 def _jvm():
     """
@@ -34,7 +34,6 @@ def _call_java(sc, java_obj, name, *args):
     m = getattr(java_obj, name)
     java_args = [_py2java(sc, arg) for arg in args]
     return _java2py(sc, m(*java_args))
-
 
 def _randomUID(cls):
     """

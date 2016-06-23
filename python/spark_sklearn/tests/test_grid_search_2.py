@@ -3,10 +3,6 @@ import scipy
 from sklearn.linear_model import Lasso as SKL_Lasso
 from sklearn.feature_extraction.text import HashingVectorizer as SKL_HashingVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer as SKL_TfidfTransformer
-try:
-    from sklearn.grid_search import GridSearchCV_original as SKL_GridSearchCV
-except ImportError:
-    from sklearn.grid_search import GridSearchCV as SKL_GridSearchCV
 from sklearn.pipeline import Pipeline as SKL_Pipeline
 from sklearn import svm, grid_search, datasets
 import sys
@@ -26,8 +22,9 @@ from pyspark.ml.feature import HashingTF, Tokenizer
 from spark_sklearn.converter import Converter
 from spark_sklearn.grid_search import GridSearchCV
 
-from spark_sklearn.test_utils import MLlibTestCase
+from spark_sklearn.test_utils import MLlibTestCase, fixtureReuseSparkSession
 
+@fixtureReuseSparkSession
 class CVTests2(MLlibTestCase):
 
     def setUp(self):
@@ -49,7 +46,7 @@ class CVTests2(MLlibTestCase):
         b2 = clf2.estimator
         self.assertEqual(b1.get_params(), b2.get_params())
 
-
+@fixtureReuseSparkSession
 class CVTests(MLlibTestCase):
 
     def setUp(self):

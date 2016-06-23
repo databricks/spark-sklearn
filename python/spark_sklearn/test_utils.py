@@ -16,21 +16,37 @@ import numpy as np
 from scipy.sparse import csr_matrix
 
 from pyspark import SparkContext
-from pyspark.sql import SQLContext
-from pyspark.mllib.linalg import Vectors
+from pyspark.sql import SparkSession
+from pyspark.ml.linalg import Vectors
 
-sc = None
+# Used as decorator to wrap around a class deriving from unittest.TestCase. Wraps current
+# unittest methods setUpClass() and tearDownClass(), invoked by the nosetest command before
+# and after unit tests are run. This enables us to create one PySpark SparkSession per
+# test fixture. The session can be referred to with self.spark or ClassName.spark.
+def fixtureReuseSparkSession(cls):
+    setup = getattr(cls, 'setUpClass', None)
+    teardown = getattr(cls, 'tearDownClass', None)
+    def setUpClass(cls):
+        if setup: setup()
+        cls.spark = SparkSession.builder.master("local").appName("Unit Tests").getOrCreate()
+    def tearDownClass(cls):
+        if cls.spark:
+            cls.spark.stop()
+            # Next session will attempt to reuse the previous stopped
+            # SparkContext if it's not cleared.
+            SparkSession._instantiatedContext = None 
+        cls.spark = None
+        if teardown: teardown()
 
-def create_sc():
-  global sc
-  if sc is None:
-    sc = SparkContext('local[1]', "spark-sklearn tests")
-  return sc
+    cls.setUpClass = classmethod(setUpClass)
+    cls.tearDownClass = classmethod(tearDownClass)
+    return cls
 
 class MLlibTestCase(unittest.TestCase):
     def setUp(self):
-        self.sc = sc
-        self.sql = SQLContext(sc)
+        super(MLlibTestCase, self).setUp()
+        self.sc = self.spark.sparkContext
+        self.sql = self.spark
         self.X = np.array([[1,2,3],
                            [-1,2,3], [1,-2,3], [1,2,-3],
                            [-1,-2,3], [1,-2,-3], [-1,2,-3],

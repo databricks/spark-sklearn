@@ -13,7 +13,7 @@ from sklearn.linear_model import LinearRegression as SKL_LinearRegression
 
 from pyspark.ml.classification import LogisticRegressionModel
 from pyspark.ml.regression import LinearRegressionModel
-from pyspark.mllib.linalg import DenseVector, SparseVector, Vectors, VectorUDT
+from pyspark.ml.linalg import DenseVector, SparseVector, Vectors, VectorUDT
 from pyspark.sql.functions import udf
 
 from spark_sklearn.udt import CSRVectorUDT
@@ -119,7 +119,7 @@ class Converter(object):
         py_cls = type(model)
         skl_cls = self._spark2skl_classes[py_cls]
         intercept = model.intercept
-        weights = model.weights
+        weights = model.coefficients
         skl = skl_cls()
         skl.intercept_ = np.float64(intercept)
         skl.coef_ = weights.toArray()
