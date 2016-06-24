@@ -2,7 +2,6 @@
 Some test utilities to create the spark context.
 """
 import sys
-
 if sys.version_info[:2] <= (2, 6):
     try:
         import unittest2 as unittest
@@ -11,7 +10,6 @@ if sys.version_info[:2] <= (2, 6):
         sys.exit(1)
 else:
     import unittest
-
 import numpy as np
 from scipy.sparse import csr_matrix
 
@@ -23,20 +21,25 @@ from pyspark.ml.linalg import Vectors
 # unittest methods setUpClass() and tearDownClass(), invoked by the nosetest command before
 # and after unit tests are run. This enables us to create one PySpark SparkSession per
 # test fixture. The session can be referred to with self.spark or ClassName.spark.
+#
+# The SparkSession is set up before invoking the class' own set up and torn down after the
+# class' tear down, so you may safely refer to it in those methods.
 def fixtureReuseSparkSession(cls):
     setup = getattr(cls, 'setUpClass', None)
     teardown = getattr(cls, 'tearDownClass', None)
     def setUpClass(cls):
-        if setup: setup()
         cls.spark = SparkSession.builder.master("local").appName("Unit Tests").getOrCreate()
+        if setup:
+            setup()
     def tearDownClass(cls):
+        if teardown:
+            teardown()
         if cls.spark:
             cls.spark.stop()
             # Next session will attempt to reuse the previous stopped
             # SparkContext if it's not cleared.
             SparkSession._instantiatedContext = None 
         cls.spark = None
-        if teardown: teardown()
 
     cls.setUpClass = classmethod(setUpClass)
     cls.tearDownClass = classmethod(tearDownClass)
