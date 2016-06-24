@@ -29,9 +29,12 @@ def fixtureReuseSparkSession(cls):
     setup = getattr(cls, 'setUpClass', None)
     teardown = getattr(cls, 'tearDownClass', None)
     def setUpClass(cls):
+        # use all cores to speed up testing
+        # disable the console progress bar so test names aren't overwritten
         cls.spark = SparkSession.builder \
                                 .master("local[*]") \
                                 .appName("Unit Tests") \
+                                .config("spark.ui.showConsoleProgress", "false") \
                                 .getOrCreate()
         if setup:
             setup()
