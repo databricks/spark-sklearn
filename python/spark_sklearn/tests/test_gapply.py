@@ -1,19 +1,16 @@
 
-from itertools import chain
 import pandas as pd
 import random
 import unittest
 
-from pyspark.conf import SparkConf
 from pyspark.sql import SparkSession
 from pyspark.sql.types import *
-from pyspark.sql import Row
 from pyspark.sql.tests import PythonOnlyPoint, PythonOnlyUDT, ExamplePoint, ExamplePointUDT
 
 from spark_sklearn.test_utils import fixtureReuseSparkSession
-from spark_sklearn.group_apply import gapply
+from spark_sklearn import gapply
 
-def _assert_frame_equal(actual, expected):
+def _assert_pdframe_equal(actual, expected):
     # Points are unhashable, so pandas' assert_frame_equal can't check they're the same by default.
     # We need to convert them to something that can be checked.
     def convert_points(pt):
@@ -23,12 +20,17 @@ def _assert_frame_equal(actual, expected):
     def normalize(df):
         converted = df.apply(lambda col: col.apply(convert_points))
         ordered = converted.sort_values(df.columns.tolist())
+        # We need to drop the index after sorting because pandas remembers the pre-sort
+        # permutation in the old index. This would trigger a failure if we were to compare
+        # differently-ordered dataframes, even if they had the same sorted content.
         unindexed = ordered.reset_index(drop=True)
         return unindexed
-    actual, expected = (normalize(x) for x in (actual, expected))
+    actual = normalize(actual)
+    expected = normalize(expected)
     pd.util.testing.assert_frame_equal(actual, expected)
 
-def _emptyFunc(key, vals): return pd.DataFrame.from_records([])
+def _emptyFunc(key, vals):
+    return pd.DataFrame.from_records([])
 
 @fixtureReuseSparkSession
 class GapplyTests(unittest.TestCase):
@@ -69,16 +71,16 @@ class GapplyTests(unittest.TestCase):
     NVALS = 100
 
     def checkGapplyEquivalentToPandas(self, pandasAggFunction, dataType, dataGen):
-        schema = StructType().add("key", LongType()).add("val", dataType)
+        schema = StructType().add("val", dataType)
         pandasDF = pd.DataFrame.from_dict({
             "key": [random.randrange(GapplyTests.NKEYS) for _ in range(GapplyTests.NROWS)],
             "val": [dataGen() for _ in range(GapplyTests.NROWS)]})
         gd = self.spark.createDataFrame(pandasDF).groupBy("key")
         def func(key, vals):
-            return pd.DataFrame.from_records([(key, pandasAggFunction(vals["val"]))])
+            return pd.DataFrame.from_records([(pandasAggFunction(vals["val"]),)])
         expected = pandasDF.groupby("key", as_index=False).agg({"val": pandasAggFunction})
         actual = gapply(gd, func, schema, "val").toPandas()
-        _assert_frame_equal(actual, expected)
+        _assert_pdframe_equal(actual, expected)
 
     def test_gapply_primitive_val(self):
         pandasAggFunction = lambda series: series.sum()
@@ -116,32 +118,35 @@ class GapplyTests(unittest.TestCase):
         self.checkGapplyEquivalentToPandas(pandasAggFunction, dataType, dataGen)
 
     def test_gapply_double_key(self):
-        schema = StructType().add("key1", LongType()).add("key2", LongType()).add("val", LongType())
+        schema = StructType().add("val", LongType())
+        randKeys = [random.randrange(GapplyTests.NKEYS) for _ in range(GapplyTests.NROWS)]
         pandasDF = pd.DataFrame.from_dict({
-            "key1": [random.randrange(GapplyTests.NKEYS // 2) for _ in range(GapplyTests.NROWS)],
-            "key2": [random.randrange(GapplyTests.NKEYS // 2) for _ in range(GapplyTests.NROWS)],
+            "key1": randKeys,
+            "key2": [GapplyTests.NKEYS + x for x in randKeys],
             "val": [random.randrange(GapplyTests.NVALS) for _ in range(GapplyTests.NROWS)]})
-        gd = self.spark.createDataFrame(pandasDF).groupBy("key1", "key2")
-        def func(key1, key2, vals):
-            return pd.DataFrame.from_records([(key1, key2, vals["val"].sum())])
-        expected = pandasDF.groupby(["key1", "key2"], as_index=False).agg({"val": "sum"})
+        gd = self.spark.createDataFrame(pandasDF).groupBy("key2", "key1")
+        def func(keys, vals):
+            assert keys[0] == keys[1] + GapplyTests.NKEYS
+            return pd.DataFrame.from_records([(vals["val"].sum(),)])
+        expected = pandasDF.groupby(["key2", "key1"], as_index=False).agg({"val": "sum"})
         actual = gapply(gd, func, schema, "val").toPandas()
-        _assert_frame_equal(actual, expected)
+        _assert_pdframe_equal(actual, expected)
 
     def test_gapply_name_change(self):
-        schema = StructType().add("KEY", LongType()).add("VAL", LongType())
+        schema = StructType().add("VAL", LongType())
         pandasDF = pd.DataFrame.from_dict({
             "key": [random.randrange(GapplyTests.NKEYS) for _ in range(GapplyTests.NROWS)],
             "val": [random.randrange(GapplyTests.NVALS) for _ in range(GapplyTests.NROWS)]})
         gd = self.spark.createDataFrame(pandasDF).groupBy("key")
         def func(key, vals):
-            return pd.DataFrame.from_records([(key, vals["val"].sum())])
-        expected = pandasDF.groupby("key", as_index=False).agg({"val": "sum"}).rename(columns={"key": "KEY", "val": "VAL"})
+            return pd.DataFrame.from_records([(vals["val"].sum(),)])
+        expected = pandasDF.groupby("key", as_index=False).agg({"val": "sum"})
+        expected = expected.rename(columns={"val": "VAL"})
         actual = gapply(gd, func, schema, "val").toPandas()
-        _assert_frame_equal(actual, expected)
+        _assert_pdframe_equal(actual, expected)
 
     def test_gapply_one_col(self):
-        schema = StructType().add("key", LongType()).add("val2", LongType())
+        schema = StructType().add("val2", LongType())
         pandasDF = pd.DataFrame.from_dict({
             "key": [random.randrange(GapplyTests.NKEYS) for _ in range(GapplyTests.NROWS)],
             "val1": [random.randrange(GapplyTests.NVALS) for _ in range(GapplyTests.NROWS)],
@@ -149,13 +154,13 @@ class GapplyTests(unittest.TestCase):
         gd = self.spark.createDataFrame(pandasDF).groupBy("key")
         def func(key, vals):
             assert vals.columns.tolist() == ["val2"], vals.columns
-            return pd.DataFrame.from_records([(key, vals["val2"].sum())])
+            return pd.DataFrame.from_records([(vals["val2"].sum(),)])
         expected = pandasDF.groupby("key", as_index=False).agg({"val2": "sum"})
         actual = gapply(gd, func, schema, "val2").toPandas()
-        _assert_frame_equal(actual, expected)
+        _assert_pdframe_equal(actual, expected)
 
     def test_gapply_all_cols(self):
-        schema = StructType().add("key", LongType()).add("val2", LongType())
+        schema = StructType().add("val2", LongType())
         pandasDF = pd.DataFrame.from_dict({
             "key": [random.randrange(GapplyTests.NKEYS) for _ in range(GapplyTests.NROWS)],
             "val1": [random.randrange(GapplyTests.NVALS) for _ in range(GapplyTests.NROWS)],
@@ -164,16 +169,16 @@ class GapplyTests(unittest.TestCase):
         gd = df.groupBy("key")
         def func(key, vals):
             assert vals.columns.tolist() == ["val1", "val2"], vals.columns
-            return pd.DataFrame.from_records([(key, vals["val2"].sum())])
+            return pd.DataFrame.from_records([(vals["val2"].sum(),)])
         expected = pandasDF.groupby("key", as_index=False).agg({"val2": "sum"})
         actual = gapply(gd, func, schema).toPandas()
-        _assert_frame_equal(actual, expected)
+        _assert_pdframe_equal(actual, expected)
         def func(key, vals):
             assert vals.columns.tolist() == ["val2", "val1"], vals.columns
-            return pd.DataFrame.from_records([(key, vals["val2"].sum())])
+            return pd.DataFrame.from_records([(vals["val2"].sum(),)])
         gd = df.select("val2", "key", "val1").groupBy("key")
         actual = gapply(gd, func, schema).toPandas()
-        _assert_frame_equal(actual, expected)
+        _assert_pdframe_equal(actual, expected)
 
 @fixtureReuseSparkSession
 class GapplyConfTests(unittest.TestCase):
@@ -204,8 +209,8 @@ class GapplyConfTests(unittest.TestCase):
             "key": [random.randrange(GapplyTests.NKEYS) for _ in range(GapplyTests.NROWS)],
             "val": [random.randrange(GapplyTests.NVALS) for _ in range(GapplyTests.NROWS)]})
         gd = self.spark.createDataFrame(pandasDF).groupBy("key")
-        def func(vals):
+        def func(_, vals):
             return pd.DataFrame.from_records([(vals["val"].sum(),)])
         expected = pandasDF.groupby("key", as_index=False).agg({"val": "sum"})[["val"]]
         actual = gapply(gd, func, schema, "val").toPandas()
-        _assert_frame_equal(actual, expected)
+        _assert_pdframe_equal(actual, expected)
