@@ -14,6 +14,10 @@ and aggregated dataframe.
 """
 
 from itertools import chain # also SPARK-15989 only
+import numpy as np
+import pickle
+import sklearn.base
+
 from pyspark import keyword_only
 import pyspark.ml
 from pyspark.ml.common import inherit_doc
@@ -22,12 +26,8 @@ from pyspark.ml.linalg import Vector, Vectors
 from pyspark.sql.functions import explode, udf
 from pyspark.sql.types import *
 from pyspark.sql.types import _type_mappings, UserDefinedType, NumericType
-import sklearn.base
+
 from spark_sklearn.group_apply import gapply
-import numpy as np
-import pickle # only necessary until SPARK-15989 resolved
-#TODO use this instead of pickle? from pyspark.serializers import CloudPickleSerializer
-# TODO org imports
 
 class _SparkSklearnEstimatorUDT(UserDefinedType):
     """
@@ -228,19 +228,17 @@ class KeyedEstimator(pyspark.ml.Estimator):
 
         oneDimensional = _validateXColReturnIs1D(dataset.schema, xCol)
         projected = dataset.select(*cols) # also verifies all cols are present
-        outputSchema = dataset.select(*keyCols).schema.add("estimator", StringType())        
+        outputSchema = StructType().add("estimator", StringType())        
         grouped = projected.groupBy(*keyCols)
         estimator = self.getOrDefault("sklearnEstimator")
 
         # Potential optimization: broadcast estimator
 
         import pandas as pd
-        def fitEstimator(*args):
-            args = list(args)
-            pandasDF = args[-1]
+        def fitEstimator(_, pandasDF):
             X = _prepareXCol(pandasDF[xCol], oneDimensional)
             y = pandasDF[yCol].values if isLabelled else None
-            args[-1] = pandasDF = None
+            pandasDF
 
             estimatorClone = sklearn.base.clone(estimator)
             estimatorClone.fit(X, y)
@@ -248,8 +246,7 @@ class KeyedEstimator(pyspark.ml.Estimator):
             estimatorClone = None
 
             # Until SPARK-15989 is resolved, we can't output the sklearn UDT directly here.
-            args[-1] = pickled
-            return pd.DataFrame.from_records([args])
+            return pd.DataFrame.from_records([(pickled,)])
         
         fitted = gapply(grouped, fitEstimator, outputSchema)
 

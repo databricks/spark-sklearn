@@ -2,15 +2,17 @@
 from itertools import chain, repeat, cycle
 import numpy as np
 import pandas as pd
-from pyspark.sql.types import *
-from pyspark.ml.linalg import Vectors
-import sklearn.base
 from sklearn.decomposition import PCA
 from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import LogisticRegression
+import unittest
+
+from pyspark.sql.types import *
+from pyspark.ml.linalg import Vectors
+import sklearn.base
+
 from spark_sklearn import KeyedEstimator, KeyedModel, SparkSklearnEstimator
 from spark_sklearn.test_utils import fixtureReuseSparkSession
-import unittest
 
 def _sort_by_component_weight(pca):
     zipped = zip(pca.components_, pca.explained_variance_ratio_)
