@@ -11,6 +11,39 @@ machine models (such as an scikit-learn estimator) to every user.
 The API provided here generalizes the scikit-learn estimator interface to the Spark ML one; in
 particular, it allows clients to train their scikit-learn estimators in parallel over a grouped
 and aggregated dataframe.
+
+>>> import numpy as np
+>>> from sklearn.linear_model import LinearRegression
+>>> from pyspark.ml.linalg import Vectors
+>>> from pyspark.sql import SparkSession
+>>> from pyspark.sql.functions import udf
+>>> spark = SparkSession.builder.master("local").getOrCreate()
+>>> df = spark.createDataFrame([(user,
+...                              Vectors.dense([i, i ** 2, i ** 3]),
+...                              user + i + 2 * i ** 2 + 3 * i ** 3)
+...                             for user in range(3) for i in range(5)])
+>>> df = df.toDF("key", "features", "y")
+>>> km = KeyedEstimator(sklearnEstimator=LinearRegression(), yCol="y").fit(df)
+>>> printnp = lambda nparr: "[" + ", ".join("{:.2f}".format(x) for x in nparr) + "]"
+>>> coefs = udf(lambda lr: "intercept: {:.2f} coefs: {}".format(lr.intercept_, printnp(lr.coef_)))
+>>> km.keyedModels.select("key", coefs("estimator").alias("lr")).show(truncate=False)
++---+-----------------------------------------+                                 
+|key|lr                                       |
++---+-----------------------------------------+
+|0  |intercept: 0.00 coefs: [1.00, 2.00, 3.00]|
+|1  |intercept: 1.00 coefs: [1.00, 2.00, 3.00]|
+|2  |intercept: 2.00 coefs: [1.00, 2.00, 3.00]|
++---+-----------------------------------------+
+<BLANKLINE>
+>>> input = spark.createDataFrame([(0, Vectors.dense(3, 1, -1))]).toDF("key", "features")
+>>> km.transform(input).show()
++---+--------------+------+                                                     
+|key|      features|output|
++---+--------------+------+
+|  0|[3.0,1.0,-1.0]|     1|
++---+--------------+------+
+<BLANKLINE>
+>>> spark.stop(); SparkSession._instantiatedContext = None
 """
 
 from itertools import chain # also SPARK-15989 only
@@ -49,7 +82,7 @@ class _SparkSklearnEstimatorUDT(UserDefinedType):
 class SparkSklearnEstimator(object):
     """:class:`SparkSklearnEstimator` is a wrapper for containing scikit-learn estimators in
     dataframes - any estimators to be stored inside the wrapper class if they are inside a
-    :class:`DataFrame`"""
+    :class:`DataFrame`."""
 
     __UDT__ = _SparkSklearnEstimatorUDT()
     
