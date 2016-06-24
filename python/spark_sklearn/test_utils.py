@@ -29,7 +29,10 @@ def fixtureReuseSparkSession(cls):
     setup = getattr(cls, 'setUpClass', None)
     teardown = getattr(cls, 'tearDownClass', None)
     def setUpClass(cls):
-        cls.spark = SparkSession.builder.master("local").appName("Unit Tests").getOrCreate()
+        cls.spark = SparkSession.builder \
+                                .master("local[*]") \
+                                .appName("Unit Tests") \
+                                .getOrCreate()
         if setup:
             setup()
     def tearDownClass(cls):

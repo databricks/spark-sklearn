@@ -27,8 +27,8 @@ export PYTHONPATH=$PYTHONPATH:/home/travis/miniconda/envs/test-environment/lib/p
 set -e
 
 if [ "$#" = 0 ]; then
-    ARGS="--all-modules"
+    ARGS="--nologcapture --all-modules --verbose --with-doctest"
 else
     ARGS="$@"
 fi
-exec nosetests -v $ARGS -w $DIR
+exec nosetests $ARGS --where $DIR
