@@ -88,7 +88,7 @@ class GapplyTests(unittest.TestCase):
 
     def test_gapply_struct_val(self):
         def pandasAggFunction(series):
-            x = long(series.apply(sum).sum()) # nested dtypes aren't converted, it's on the user
+            x = int(series.apply(sum).sum()) # nested dtypes aren't converted, it's on the user
             return (x, x)
         dataType = StructType().add("a", LongType()).add("b", LongType())
         dataGen = lambda: (random.randrange(GapplyTests.NVALS), random.randrange(GapplyTests.NVALS))
