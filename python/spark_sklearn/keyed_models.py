@@ -1,12 +1,12 @@
 """
 Classes for implementing keyed models.
 
-The use case that this addresses is where a client has a dataset with many keys - the number of
-distinct keys is such that the total number of rows for every key value can be contained completely
-in memory on a single machine.
+The use case that this addresses is where a client has a dataset with many keys - the distribution
+ of distinct keys amongst the is such that the total number of rows for every key value can be
+contained completely in memory on a single machine.
 
 This assumption is particularly enabling because clients may wish to apply more intricate single-
-machine models (such as an scikit-learn estimator) to every user.
+machine models (such as a scikit-learn estimator) to every user.
 
 The API provided here generalizes the scikit-learn estimator interface to the Spark ML one; in
 particular, it allows clients to train their scikit-learn estimators in parallel over a grouped
@@ -27,7 +27,7 @@ and aggregated dataframe.
 >>> printnp = lambda nparr: "[" + ", ".join("{:.2f}".format(x) for x in nparr) + "]"
 >>> coefs = udf(lambda lr: "intercept: {:.2f} coefs: {}".format(lr.intercept_, printnp(lr.coef_)))
 >>> km.keyedModels.select("key", coefs("estimator").alias("lr")).show(truncate=False)
-+---+-----------------------------------------+                                 
++---+-----------------------------------------+
 |key|lr                                       |
 +---+-----------------------------------------+
 |0  |intercept: 0.00 coefs: [1.00, 2.00, 3.00]|
@@ -37,16 +37,16 @@ and aggregated dataframe.
 <BLANKLINE>
 >>> input = spark.createDataFrame([(0, Vectors.dense(3, 1, -1))]).toDF("key", "features")
 >>> km.transform(input).show()
-+---+--------------+------+                                                     
++---+--------------+------+
 |key|      features|output|
 +---+--------------+------+
 |  0|[3.0,1.0,-1.0]|     1|
 +---+--------------+------+
 <BLANKLINE>
->>> spark.stop(); SparkSession._instantiatedContext = None
+>>> spark.stop(); SparkSession._instantiatedContext = None # clear hidden SparkContext for reuse
 """
 
-from itertools import chain # also SPARK-15989 only
+from itertools import chain
 import numpy as np
 import pickle
 import sklearn.base
@@ -81,14 +81,17 @@ class _SparkSklearnEstimatorUDT(UserDefinedType):
 
 class SparkSklearnEstimator(object):
     """:class:`SparkSklearnEstimator` is a wrapper for containing scikit-learn estimators in
-    dataframes - any estimators to be stored inside the wrapper class if they are inside a
-    :class:`DataFrame`."""
+    dataframes - any estimators need to be stored inside the wrapper class to be properly
+    serialized/deserialized in dataframe operations.
+    """
 
     __UDT__ = _SparkSklearnEstimatorUDT()
     
     def __init__(self, estimator):
         """Initializes with the parameter estimator.
-        :param: estimator: scikit-learn estimator to contain."""
+
+        :param: estimator: scikit-learn estimator to contain.
+        """
         self._estimator = estimator
 
     @property
@@ -98,18 +101,21 @@ class SparkSklearnEstimator(object):
     def __getattr__(self, item):
         if hasattr(self._estimator, item):
             return getattr(self._estimator, item)
-        raise AttributeError
+        raise AttributeError()
 
-def _validateXColReturnIs1D(schema, xCol):
+def _isOneDimensional(schema, xCol):
     xType = schema[xCol].dataType
-    oneDimensional = isinstance(xType, NumericType)
-    if not oneDimensional and xType != Vector.__UDT__:
+    return isinstance(xType, NumericType)
+
+def _validateXCol(schema, xCol):
+    if not _isOneDimensional(schema, xCol) and schema[xCol].dataType != Vector.__UDT__:
         raise TypeError("Input column {} is neither a numeric type nor a vector".format(xCol))
-    return oneDimensional
 
 def _prepareXCol(series, is1D):
-    if is1D: return series.values.reshape(-1, 1)
-    else: return np.vstack(series.apply(lambda v: v.toArray()))
+    if is1D:
+        return series.values.reshape(-1, 1)
+    else:
+        return np.vstack(series.apply(lambda v: v.toArray()))
 
 @inherit_doc
 class KeyedEstimator(pyspark.ml.Estimator):
@@ -228,7 +234,8 @@ class KeyedEstimator(pyspark.ml.Estimator):
 
     @staticmethod
     def _inferredParams(inputParams):
-        if "yCol" in inputParams: inputParams["estimatorType"] = "predictor"
+        if "yCol" in inputParams:
+            inputParams["estimatorType"] = "predictor"
         return inputParams
 
     def _verifyEstimatorType(self):
@@ -246,7 +253,8 @@ class KeyedEstimator(pyspark.ml.Estimator):
             if not hasattr(estimator, "predict"):
                 raise ValueError("estimatorType assumed to be predictorr, but " +
                                  "sklearnEstimator is missing predict()")
-        else: raise ValueError("estimatorType {} is unknown".format(estimatorType))
+        else:
+            raise ValueError("estimatorType {} is unknown".format(estimatorType))
         
     def _fit(self, dataset):
         keyCols = self.getOrDefault("keyCols")
@@ -254,12 +262,13 @@ class KeyedEstimator(pyspark.ml.Estimator):
         yCol = self.getOrDefault("yCol")
         isLabelled = yCol is not None
         assert isLabelled == (self.getOrDefault("estimatorType") == "predictor")
+        _validateXCol(dataset.schema, xCol)
         
         cols = keyCols[:]
         cols.append(xCol)
         if isLabelled: cols.append(yCol)
 
-        oneDimensional = _validateXColReturnIs1D(dataset.schema, xCol)
+        oneDimensional = _isOneDimensional(dataset.schema, xCol)
         projected = dataset.select(*cols) # also verifies all cols are present
         outputSchema = StructType().add("estimator", StringType())        
         grouped = projected.groupBy(*keyCols)
@@ -271,7 +280,7 @@ class KeyedEstimator(pyspark.ml.Estimator):
         def fitEstimator(_, pandasDF):
             X = _prepareXCol(pandasDF[xCol], oneDimensional)
             y = pandasDF[yCol].values if isLabelled else None
-            pandasDF
+            pandasDF = None
 
             estimatorClone = sklearn.base.clone(estimator)
             estimatorClone.fit(X, y)
@@ -301,7 +310,7 @@ class KeyedModel(pyspark.ml.Model):
     """Represents a Spark ML Model, generated by a fitted :class:`KeyedEstimator`.
     
     Wraps fitted scikit-learn estimators - at transformation time transforms the
-    input for each key using key-specific model. See :class:`KeyedEstimator` documentation for
+    input for each key using a key-specific model. See :class:`KeyedEstimator` documentation for
     details.
 
     If no estimator is present for a given key at transformation time, the prediction is null.
@@ -346,7 +355,9 @@ class KeyedModel(pyspark.ml.Model):
         keyCols = self.getOrDefault("keyCols")
         xCol = self.getOrDefault("xCol")
         outputCol = self.getOrDefault("outputCol")        
-        outputType = self.getOrDefault("outputType")        
+        outputType = self.getOrDefault("outputType")
+
+        _validateXCol(dataset.schema, xCol)
         
         # Potential optimization: group input data by key, then only deserialize each
         # estimator at most once. This becomes a bit difficult because then extraneous non-input
@@ -356,7 +367,7 @@ class KeyedModel(pyspark.ml.Model):
         # Potential optimization: broadcast estimator
         
         shouldPredict = self.getOrDefault("estimatorType") == "predictor"
-        oneDimensional = _validateXColReturnIs1D(dataset.schema, xCol)
+        oneDimensional = _isOneDimensional(dataset.schema, xCol)
         if shouldPredict:
             cast = KeyedModel._sql_types[type(outputType)]
         else:
@@ -365,11 +376,16 @@ class KeyedModel(pyspark.ml.Model):
             # the cast value, so it tries to serialize it.
             cast = None 
         def applyEstimator(estimator, x):
-            if not estimator: return None
-            if oneDimensional: x = [[x]]
-            else: x = x.toArray().reshape(1, -1)
-            if shouldPredict: return cast(estimator.predict(x)[0])
-            else: return Vectors.dense(estimator.transform(x)[0])
+            if not estimator:
+                return None
+            if oneDimensional:
+                x = [[x]]
+            else:
+                x = x.toArray().reshape(1, -1)
+            if shouldPredict:
+                return cast(estimator.predict(x)[0])
+            else:
+                return Vectors.dense(estimator.transform(x)[0])
         transformation = udf(applyEstimator, outputType)
 
         joined = dataset.join(self.keyedModels, on=keyCols, how="left_outer")

@@ -12,28 +12,22 @@ from pyspark.ml.linalg import Vectors
 import sklearn.base
 
 from spark_sklearn import KeyedEstimator, KeyedModel, SparkSklearnEstimator
-from spark_sklearn.test_utils import fixtureReuseSparkSession
+from spark_sklearn.test_utils import fixtureReuseSparkSession, assertPandasAlmostEqual
 
-def _sort_by_component_weight(pca):
+def _sortByComponentWeight(pca):
     zipped = zip(pca.components_, pca.explained_variance_ratio_)
     ordered = sorted(zipped, key=lambda x: x[1])
     return tuple(np.array(unzipped) for unzipped in zip(*ordered))
 
-def _assert_frame_almost_equal(actual, expected, sortby):
+def _assertPandasAlmostEqual(actual, expected, sortby):
     def convert_estimators(x): # note convertion makes estimators invariant to training order.
         if isinstance(x, SparkSklearnEstimator): x = x.estimator
         if isinstance(x, LinearRegression) or isinstance(x, LogisticRegression):
             return x.coef_, x.intercept_
         if isinstance(x, PCA):
-            return _sort_by_component_weight(x)
+            return _sortByComponentWeight(x)
         return x
-    def normalize(df):
-        converted = df.apply(lambda col: col.apply(convert_estimators))
-        ordered = converted.sort_values(sortby)
-        unindexed = ordered.reset_index(drop=True)
-        return unindexed
-    actual, expected = (normalize(x) for x in (actual, expected))
-    pd.util.testing.assert_almost_equal(actual, expected)
+    assertPandasAlmostEqual(actual, expected, convert=convert_estimators, sortby=sortby)
 
 @fixtureReuseSparkSession
 class KeyedModelTests(unittest.TestCase):
@@ -110,12 +104,14 @@ class KeyedModelTests(unittest.TestCase):
         outputCol = kwargs.get("outputCol", KeyedEstimator.paramSpecs["outputCol"]["default"])
         xCol = kwargs.get("xCol", KeyedEstimator.paramSpecs["xCol"]["default"])
 
-        def nExamplesPerUser(i): return max(minExamples, i + 1)
+        nExamplesPerUser = lambda i: max(minExamples, i + 1)
         userKeys = [[i for _ in keyCols] for i in range(NUSERS)]
         features = [[featureGen() for _ in range(nExamplesPerUser(i))] for i in range(NUSERS)]
         useless = [["useless col" for _ in range(nExamplesPerUser(i))] for i in range(NUSERS)]
-        if isTransformer: labels = None
-        else: labels = [[labelGen() for _ in range(nExamplesPerUser(i))] for i in range(NUSERS)]
+        if isTransformer:
+            labels = None
+        else:
+            labels = [[labelGen() for _ in range(nExamplesPerUser(i))] for i in range(NUSERS)]
 
         Xs = [np.vstack(x) for x in features]
         ys = repeat(None) if isTransformer else [np.array(y) for y in labels]
@@ -139,10 +135,10 @@ class KeyedModelTests(unittest.TestCase):
         km = ke.fit(inputDF)
 
         actualDF = km.keyedModels.toPandas()
-        _assert_frame_almost_equal(actualDF, expectedDF, keyCols)
+        _assertPandasAlmostEqual(actualDF, expectedDF, keyCols)
 
         # Test users with different amounts of points.
-        def nTestPerUser(i): return NUSERS // 4 if i < NUSERS // 2 else NUSERS * 3 // 4
+        nTestPerUser = lambda i: NUSERS // 4 if i < NUSERS // 2 else NUSERS * 3 // 4
         testFeatures = [[featureGen() for _ in range(nTestPerUser(i))] for i in range(NUSERS)]
         # "useless" column has nothing to do with computation, but is essential for keeping order
         # the same between the spark and non-spark versions
@@ -153,8 +149,10 @@ class KeyedModelTests(unittest.TestCase):
         inputDF["useless"] = flattenAndConvertNumpy(useless)
 
         def makeOutput(estimator, X):
-            if isTransformer: return estimator.transform(X)
-            else: return estimator.predict(X).tolist()
+            if isTransformer:
+                return estimator.transform(X)
+            else:
+                return estimator.predict(X).tolist()
         Xs = [np.vstack(x) for x in testFeatures]
         expectedOutput = map(makeOutput, localEstimators, Xs)
         expectedDF = inputDF.copy(deep=True)
@@ -163,7 +161,7 @@ class KeyedModelTests(unittest.TestCase):
         inputDF = self.spark.createDataFrame(inputDF)
         actualDF = km.transform(inputDF).toPandas()
 
-        _assert_frame_almost_equal(actualDF, expectedDF, keyCols + ["useless"])
+        _assertPandasAlmostEqual(actualDF, expectedDF, keyCols + ["useless"])
         
     NDIM = 5
         
