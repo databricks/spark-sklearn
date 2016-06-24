@@ -192,7 +192,7 @@ class KeyedModelTests(unittest.TestCase):
     def test_diff_type_input(self):
         # Integer array
         minExamples = 1
-        featureGen = lambda: np.random.random_integers(low=1, high=10, size=KeyedModelTests.NDIM)
+        featureGen = lambda: np.random.randint(low=0, high=10, size=KeyedModelTests.NDIM)
         labelGen = lambda: np.random.random()
         self.checkKeyedModelEquivalent(minExamples, featureGen, labelGen,
                                        sklearnEstimator=LinearRegression(), yCol="y")
@@ -203,7 +203,7 @@ class KeyedModelTests(unittest.TestCase):
                                        sklearnEstimator=LinearRegression(), yCol="y")
 
         # integer input
-        featureGen = lambda: np.random.random_integers(100)
+        featureGen = lambda: np.random.randint(100)
         self.checkKeyedModelEquivalent(minExamples, featureGen, labelGen,
                                        sklearnEstimator=LinearRegression(), yCol="y")
 
