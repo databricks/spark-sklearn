@@ -29,9 +29,11 @@ def fixtureReuseSparkSession(cls):
     teardown = getattr(cls, 'tearDownClass', None)
     def setUpClass(cls):
         cls.spark = SparkSession.builder.master("local").appName("Unit Tests").getOrCreate()
-        if setup: setup()
+        if setup:
+            setup()
     def tearDownClass(cls):
-        if teardown: teardown()
+        if teardown:
+            teardown()
         if cls.spark:
             cls.spark.stop()
             # Next session will attempt to reuse the previous stopped
