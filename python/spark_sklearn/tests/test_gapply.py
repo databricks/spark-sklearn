@@ -14,12 +14,12 @@ def _assert_pdframe_equal(actual, expected):
     # Points are unhashable, so pandas' assert_frame_equal can't check they're the same by default.
     # We need to convert them to something that can be checked.
     def convert_points(pt):
-        if any(isinstance(pt, t) for t in (PythonOnlyPoint, ExamplePoint)):
+        if any(isinstance(pt, t) for t in [PythonOnlyPoint, ExamplePoint]):
             return (pt.x, pt.y)
         return pt
-    def normalize(df):
-        converted = df.apply(lambda col: col.apply(convert_points))
-        ordered = converted.sort_values(df.columns.tolist())
+    def normalize(pdDF):
+        converted = pdDF.apply(lambda col: col.apply(convert_points))
+        ordered = converted.sort_values(pdDF.columns.tolist())
         # We need to drop the index after sorting because pandas remembers the pre-sort
         # permutation in the old index. This would trigger a failure if we were to compare
         # differently-ordered dataframes, even if they had the same sorted content.

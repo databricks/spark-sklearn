@@ -23,7 +23,7 @@ from pyspark.ml.linalg import Vectors
 # test fixture. The session can be referred to with self.spark or ClassName.spark.
 #
 # The SparkSession is set up before invoking the class' own set up and torn down after the
-# class' tear down, so you may safer to it in those methods.
+# class' tear down, so you may safely refer to it in those methods.
 def fixtureReuseSparkSession(cls):
     setup = getattr(cls, 'setUpClass', None)
     teardown = getattr(cls, 'tearDownClass', None)

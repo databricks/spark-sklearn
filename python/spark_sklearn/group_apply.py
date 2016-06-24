@@ -125,7 +125,7 @@ def gapply(grouped_data, func, schema, *cols):
 
     inputAggDF = grouped_data.agg({col: 'collect_list' for col in cols})
     # Recover canonical order (aggregation may change column order)
-    cannonicalOrder = chain(keyCols, (inputAggDF['collect_list(' + col + ')'] for col in cols))
+    cannonicalOrder = chain(keyCols, [inputAggDF['collect_list(' + col + ')'] for col in cols])
     inputAggDF = inputAggDF.select(*cannonicalOrder)
 
     # Wraps the user-proveded function with another python function, which prepares the
@@ -135,15 +135,15 @@ def gapply(grouped_data, func, schema, *cols):
         nvals = len(cols)
         keys, collectedCols = args[:-nvals], args[-nvals:]
         paramKeys = tuple(keys)
-        if len(paramKeys) == 1: paramKeys = paramKeys[0]
-        valuesDF = pd.DataFrame.from_dict(
-            {colName: colList for colName, colList in zip(cols, collectedCols)})
-        valuesDF = valuesDF[list(cols)] # reorder to cannonical
+        if len(paramKeys) == 1:
+            paramKeys = paramKeys[0]
+        valuesDF = pd.DataFrame.from_dict(dict(zip(cols, collectedCols)))
+        valuesDF = valuesDF[list(cols)] # reorder to canonical
         outputDF = func(paramKeys, valuesDF)
         valCols = outputDF.columns.tolist()
         for key, keyName in zip(keys, keyCols):
             outputDF[keyName] = key
-        outputDF = outputDF[keyCols + valCols] # reorder to cannonical
+        outputDF = outputDF[keyCols + valCols] # reorder to canonical
         # To recover native python types for serialization, we need
         # to convert the pandas dataframe to a numpy array, then to a
         # native list (can't go straight to native, since pandas will
