@@ -58,7 +58,8 @@ def gapply(grouped_data, func, schema, *cols):
     >>> import pandas as pd
     >>> from pyspark.sql import SparkSession
     >>> from spark_sklearn.group_apply import gapply
-    >>> spark = SparkSession.builder.master("local").getOrCreate()
+    >>> from spark_sklearn.util import createLocalSparkSession
+    >>> spark = createLocalSparkSession()
     >>> df = (spark
     ...     .createDataFrame([Row(course="dotNET", year=2012, earnings=10000),
     ...                       Row(course="Java",   year=2012, earnings=20000),

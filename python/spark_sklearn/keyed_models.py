@@ -14,9 +14,11 @@ and aggregated dataframe.
 
 >>> from sklearn.linear_model import LinearRegression
 >>> from pyspark.ml.linalg import Vectors
->>> from pyspark.sql import SparkSession
 >>> from pyspark.sql.functions import udf
->>> spark = SparkSession.builder.master("local").getOrCreate()
+>>> from pyspark.sql import SparkSession
+>>> from spark_sklearn.util import createLocalSparkSession
+>>> from spark_sklearn.keyed_models import KeyedEstimator
+>>> spark = createLocalSparkSession()
 >>> df = spark.createDataFrame([(user,
 ...                              Vectors.dense([i, i ** 2, i ** 3]),
 ...                              user + i + 2 * i ** 2 + 3 * i ** 3)

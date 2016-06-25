@@ -2,6 +2,7 @@
 import uuid
 
 from pyspark import SparkContext
+from pyspark.sql import SparkSession
 
 # WARNING: These are private Spark APIs.
 from pyspark.ml.common import _py2java, _java2py
@@ -41,3 +42,12 @@ def _randomUID(cls):
     concatenates the class name, "_", and 12 random hex chars.
     """
     return cls.__name__ + "_" + uuid.uuid4().hex[12:]
+
+def createLocalSparkSession(appName="spark-sklearn"):
+    """Generates a :class:`SparkSession` utilizing all local cores
+    with the progress bar disabled but otherwise default config."""
+    return SparkSession.builder \
+                       .master("local[*]") \
+                       .appName(appName) \
+                       .config("spark.ui.showConsoleProgress", "false") \
+                       .getOrCreate()

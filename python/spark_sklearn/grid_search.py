@@ -84,10 +84,11 @@ class GridSearchCV(BaseSearchCV):
     >>> from sklearn import svm, datasets
     >>> from spark_sklearn import GridSearchCV
     >>> from pyspark.sql import SparkSession
+    >>> from spark_sklearn.util import createLocalSparkSession
+    >>> spark = createLocalSparkSession()
     >>> iris = datasets.load_iris()
     >>> parameters = {'kernel':('linear', 'rbf'), 'C':[1, 10]}
     >>> svr = svm.SVC()
-    >>> spark = SparkSession.builder.master("local").getOrCreate()
     >>> clf = GridSearchCV(spark.sparkContext, svr, parameters)
     >>> clf.fit(iris.data, iris.target)
     ...                             # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS

@@ -14,9 +14,10 @@ import numpy as np
 import pandas as pd
 from scipy.sparse import csr_matrix
 
-from pyspark import SparkContext
 from pyspark.sql import SparkSession
 from pyspark.ml.linalg import Vectors
+
+from spark_sklearn.util import createLocalSparkSession
 
 # Used as decorator to wrap around a class deriving from unittest.TestCase. Wraps current
 # unittest methods setUpClass() and tearDownClass(), invoked by the nosetest command before
@@ -29,13 +30,7 @@ def fixtureReuseSparkSession(cls):
     setup = getattr(cls, 'setUpClass', None)
     teardown = getattr(cls, 'tearDownClass', None)
     def setUpClass(cls):
-        # use all cores to speed up testing
-        # disable the console progress bar so test names aren't overwritten
-        cls.spark = SparkSession.builder \
-                                .master("local[*]") \
-                                .appName("Unit Tests") \
-                                .config("spark.ui.showConsoleProgress", "false") \
-                                .getOrCreate()
+        cls.spark = createLocalSparkSession("Unit Tests")
         if setup:
             setup()
     def tearDownClass(cls):
