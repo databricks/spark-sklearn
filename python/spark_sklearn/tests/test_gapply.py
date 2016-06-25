@@ -24,7 +24,7 @@ def _emptyFunc(key, vals):
 
 @fixtureReuseSparkSession
 class GapplyTests(unittest.TestCase):
-    
+
     def test_gapply_empty(self):
         # Implicitly checks that pandas version is large enough (unit tests for the actual version
         # checking itself would require some serious mocking)
@@ -45,7 +45,7 @@ class GapplyTests(unittest.TestCase):
         emptyLongLongDF = self.spark.createDataFrame([], schema=longLongSchema)
         gd = emptyLongLongDF.groupBy("a")
         self.assertRaises(ValueError, gapply, gd, _emptyFunc, LongType(), "b")
-        
+
     def test_gapply_raises_if_bad_cols(self):
         longLongLongSchema = StructType() \
                              .add("a", LongType()).add("b", LongType()).add("c", LongType())
@@ -192,7 +192,7 @@ class GapplyConfTests(unittest.TestCase):
                                 .appName("Unit Tests") \
                                 .config("spark.sql.retainGroupColumns", "true") \
                                 .getOrCreate()
-    
+
     def test_gapply_no_keys(self):
         schema = StructType().add("val", LongType())
         pandasDF = pd.DataFrame.from_dict({

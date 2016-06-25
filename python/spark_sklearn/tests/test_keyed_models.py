@@ -51,10 +51,10 @@ class KeyedModelTests(unittest.TestCase):
 
     def test_invalid_argument(self):
         self.assertRaises(ValueError, KeyedEstimator)
-        
+
         create = lambda: KeyedEstimator(sklearnEstimator=5)
         self.assertRaises(ValueError, create)
-        
+
         class SomeUDC(object):
             pass
         create = lambda: KeyedEstimator(sklearnEstimator=SomeUDC())
@@ -65,16 +65,16 @@ class KeyedModelTests(unittest.TestCase):
 
         create = lambda: KeyedEstimator(sklearnEstimator=PCA(), keyCols=["key", "estimator"])
         self.assertRaises(ValueError, create)
-        
+
         create = lambda: KeyedEstimator(sklearnEstimator=PCA(), xCol="estimator")
         self.assertRaises(ValueError, create)
 
         create = lambda: KeyedEstimator(sklearnEstimator=LinearRegression(), yCol="estimator")
         self.assertRaises(ValueError, create)
-        
+
         create = lambda: KeyedEstimator(sklearnEstimator=PCA(), yCol="estimator")
         self.assertRaises(ValueError, create)
-        
+
         create = lambda: KeyedEstimator(sklearnEstimator=LinearRegression())
         self.assertRaises(ValueError, create)
 
@@ -130,7 +130,7 @@ class KeyedModelTests(unittest.TestCase):
         inputDF["useless"] = flattenAndConvertNumpy(useless)
         if labels: inputDF[kwargs["yCol"]] = flattenAndConvertNumpy(labels)
         inputDF = self.spark.createDataFrame(inputDF)
-        
+
         ke = KeyedEstimator(**kwargs)
         km = ke.fit(inputDF)
 
@@ -162,16 +162,16 @@ class KeyedModelTests(unittest.TestCase):
         actualDF = km.transform(inputDF).toPandas()
 
         _assertPandasAlmostEqual(actualDF, expectedDF, keyCols + ["useless"])
-        
+
     NDIM = 5
-        
+
     def test_transformer(self):
         minExamples = 1
         featureGen = lambda: np.random.random(KeyedModelTests.NDIM)
         labelGen = None
         self.checkKeyedModelEquivalent(minExamples, featureGen, labelGen,
                                        sklearnEstimator=PCA())
-        
+
     def test_regression_predictor(self):
         minExamples = 1
         featureGen = lambda: np.random.random(KeyedModelTests.NDIM)
@@ -214,7 +214,7 @@ class KeyedModelTests(unittest.TestCase):
         self.checkKeyedModelEquivalent(minExamples, featureGen, labelGen,
                                        sklearnEstimator=LinearRegression(), yCol="myy",
                                        xCol="myfeatures", keyCols=["mykey1", "mykey2"])
-        
+
     @unittest.skip("python vector nulls are unsupported for now, see SPARK-16175")
     def test_surprise_key(self):
         ke = KeyedEstimator(sklearnEstimator=PCA())
@@ -235,4 +235,3 @@ class KeyedModelTests(unittest.TestCase):
                          [("features", "bigint"),
                           ("key", "bigint"),
                           ("output", "vector")])
-        

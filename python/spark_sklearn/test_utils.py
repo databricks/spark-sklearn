@@ -39,7 +39,7 @@ def fixtureReuseSparkSession(cls):
             cls.spark.stop()
             # Next session will attempt to reuse the previous stopped
             # SparkContext if it's not cleared.
-            SparkSession._instantiatedContext = None 
+            SparkSession._instantiatedContext = None
         cls.spark = None
 
     cls.setUpClass = classmethod(setUpClass)
