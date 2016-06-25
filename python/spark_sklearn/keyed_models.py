@@ -50,6 +50,7 @@ from itertools import chain
 import numpy as np
 import pickle
 import sklearn.base
+import sys
 
 from pyspark import keyword_only
 import pyspark.ml
@@ -66,18 +67,23 @@ class _SparkSklearnEstimatorUDT(UserDefinedType):
     """
     SQL user-defined type (UDT) for scikit-learn estimator
     """
-
-    @classmethod
-    def sqlType(cls): return StringType()
-
-    @classmethod
-    def module(cls): return "spark_sklearn.keyed_models"
-
-    def serialize(self, obj): return pickle.dumps(obj.estimator)
-
-    def deserialize(self, datum): return SparkSklearnEstimator(pickle.loads(datum))
     
-    def simpleString(self): return "sklearn-estimator"
+    @classmethod
+    def sqlType(cls):
+        return StringType() if sys.version_info[0] < 3 else BinaryType()
+        
+    @classmethod
+    def module(cls):
+        return "spark_sklearn.keyed_models"
+
+    def serialize(self, obj):
+        return pickle.dumps(obj.estimator)
+
+    def deserialize(self, datum):
+        return SparkSklearnEstimator(pickle.loads(datum))
+    
+    def simpleString(self):
+        return "sklearn-estimator"
 
 class SparkSklearnEstimator(object):
     """:class:`SparkSklearnEstimator` is a wrapper for containing scikit-learn estimators in
@@ -270,7 +276,7 @@ class KeyedEstimator(pyspark.ml.Estimator):
 
         oneDimensional = _isOneDimensional(dataset.schema, xCol)
         projected = dataset.select(*cols) # also verifies all cols are present
-        outputSchema = StructType().add("estimator", StringType())        
+        outputSchema = StructType().add("estimator", _SparkSklearnEstimatorUDT.sqlType())
         grouped = projected.groupBy(*keyCols)
         estimator = self.getOrDefault("sklearnEstimator")
 
