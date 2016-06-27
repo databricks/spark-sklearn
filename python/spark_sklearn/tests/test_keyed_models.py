@@ -21,7 +21,8 @@ def _sortByComponentWeight(pca):
 
 def _assertPandasAlmostEqual(actual, expected, sortby):
     def convert_estimators(x): # note convertion makes estimators invariant to training order.
-        if isinstance(x, SparkSklearnEstimator): x = x.estimator
+        if isinstance(x, SparkSklearnEstimator):
+            x = x.estimator
         if isinstance(x, LinearRegression) or isinstance(x, LogisticRegression):
             return x.coef_, x.intercept_
         if isinstance(x, PCA):
@@ -31,6 +32,8 @@ def _assertPandasAlmostEqual(actual, expected, sortby):
 
 @fixtureReuseSparkSession
 class KeyedModelTests(unittest.TestCase):
+
+    NDIM = 5
 
     class _CustomTransformer(sklearn.base.BaseEstimator):
         def fit(X, y=None):
@@ -45,7 +48,7 @@ class KeyedModelTests(unittest.TestCase):
 
     def test_defaults(self):
         ke = KeyedEstimator(sklearnEstimator=PCA())
-        for paramName, paramSpec in KeyedEstimator.paramSpecs.items():
+        for paramName, paramSpec in KeyedEstimator._paramSpecs.items():
             if "default" in paramSpec:
                 self.assertEqual(paramSpec["default"], ke.getOrDefault(paramName))
 
@@ -100,9 +103,9 @@ class KeyedModelTests(unittest.TestCase):
         # User keys are just [0, NUSERS), repeated for each key if there are multiple columns.
         # The i-th user has i examples.
 
-        keyCols = kwargs.get("keyCols", KeyedEstimator.paramSpecs["keyCols"]["default"])
-        outputCol = kwargs.get("outputCol", KeyedEstimator.paramSpecs["outputCol"]["default"])
-        xCol = kwargs.get("xCol", KeyedEstimator.paramSpecs["xCol"]["default"])
+        keyCols = kwargs.get("keyCols", KeyedEstimator._paramSpecs["keyCols"]["default"])
+        outputCol = kwargs.get("outputCol", KeyedEstimator._paramSpecs["outputCol"]["default"])
+        xCol = kwargs.get("xCol", KeyedEstimator._paramSpecs["xCol"]["default"])
 
         nExamplesPerUser = lambda i: max(minExamples, i + 1)
         userKeys = [[i for _ in keyCols] for i in range(NUSERS)]
@@ -128,7 +131,8 @@ class KeyedModelTests(unittest.TestCase):
             {k: [i for i in range(NUSERS) for _ in range(nExamplesPerUser(i))] for k in keyCols})
         inputDF[xCol] = flattenAndConvertNumpy(features)
         inputDF["useless"] = flattenAndConvertNumpy(useless)
-        if labels: inputDF[kwargs["yCol"]] = flattenAndConvertNumpy(labels)
+        if labels:
+            inputDF[kwargs["yCol"]] = flattenAndConvertNumpy(labels)
         inputDF = self.spark.createDataFrame(inputDF)
 
         ke = KeyedEstimator(**kwargs)
@@ -162,8 +166,6 @@ class KeyedModelTests(unittest.TestCase):
         actualDF = km.transform(inputDF).toPandas()
 
         _assertPandasAlmostEqual(actualDF, expectedDF, keyCols + ["useless"])
-
-    NDIM = 5
 
     def test_transformer(self):
         minExamples = 1

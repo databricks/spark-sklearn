@@ -12,7 +12,6 @@ The API provided here generalizes the scikit-learn estimator interface to the Sp
 particular, it allows clients to train their scikit-learn estimators in parallel over a grouped
 and aggregated dataframe.
 
->>> import numpy as np
 >>> from sklearn.linear_model import LinearRegression
 >>> from pyspark.ml.linalg import Vectors
 >>> from pyspark.sql import SparkSession
@@ -23,18 +22,39 @@ and aggregated dataframe.
 ...                              user + i + 2 * i ** 2 + 3 * i ** 3)
 ...                             for user in range(3) for i in range(5)])
 >>> df = df.toDF("key", "features", "y")
->>> km = KeyedEstimator(sklearnEstimator=LinearRegression(), yCol="y").fit(df)
->>> printnp = lambda nparr: "[" + ", ".join("{:.2f}".format(x) for x in nparr) + "]"
->>> coefs = udf(lambda lr: "intercept: {:.2f} coefs: {}".format(lr.intercept_, printnp(lr.coef_)))
->>> km.keyedModels.select("key", coefs("estimator").alias("lr")).show(truncate=False)
-+---+-----------------------------------------+
-|key|lr                                       |
-+---+-----------------------------------------+
-|0  |intercept: 0.00 coefs: [1.00, 2.00, 3.00]|
-|1  |intercept: 1.00 coefs: [1.00, 2.00, 3.00]|
-|2  |intercept: 2.00 coefs: [1.00, 2.00, 3.00]|
-+---+-----------------------------------------+
+>>> df.where("5 < y and y < 10").sort("key", "y").show()
++---+-------------+---+
+|key|     features|  y|
++---+-------------+---+
+|  0|[1.0,1.0,1.0]|  6|
+|  1|[1.0,1.0,1.0]|  7|
+|  2|[1.0,1.0,1.0]|  8|
++---+-------------+---+
 <BLANKLINE>
+>>> km = KeyedEstimator(sklearnEstimator=LinearRegression(), yCol="y").fit(df)
+>>> def printModel(model):
+...     numeric = "{:.2f}"
+...     coef = "[" + ", ".join(numeric.format(x) for x in model.coef_) + "]"
+...     intercept = numeric.format(model.intercept_)
+...     return "intercept: {} coef: {}".format(intercept, coef)
+...
+>>> km.keyedModels.columns
+['key', 'estimator']
+>>> printedModels = udf(printModel)("estimator").alias("linear fit")
+>>> km.keyedModels.select("key", printedModels).sort("key").show(truncate=False)
++---+----------------------------------------+
+|key|linear fit                              |
++---+----------------------------------------+
+|0  |intercept: 0.00 coef: [1.00, 2.00, 3.00]|
+|1  |intercept: 1.00 coef: [1.00, 2.00, 3.00]|
+|2  |intercept: 2.00 coef: [1.00, 2.00, 3.00]|
++---+----------------------------------------+
+<BLANKLINE>
+
+Now that we have generated a linear model for each key, we can apply it to keyed test data.
+In the following, we only show one point for simplicity, but the test data can contain multiple
+points for multiple different keys.
+
 >>> input = spark.createDataFrame([(0, Vectors.dense(3, 1, -1))]).toDF("key", "features")
 >>> km.transform(input).show()
 +---+--------------+------+
@@ -70,6 +90,7 @@ class _SparkSklearnEstimatorUDT(UserDefinedType):
 
     @classmethod
     def sqlType(cls):
+        # In python 2, pickle serializes to strings, whereas in python 3, pickle uses bytes.
         return StringType() if sys.version_info[0] < 3 else BinaryType()
 
     @classmethod
@@ -141,7 +162,7 @@ class KeyedEstimator(pyspark.ml.Estimator):
         Examples: `sklearn.decomposition.PCA`, `sklearn.cluster.KMeans`
 
         In this case, the estimator will aggregate the all input features for a given key into a
-        `NxD` data matrix, where `N` is the number of distinct rows for the given key and `D` is the
+        `NxD` data matrix, where `N` is the number of rows with the given key and `D` is the
         feature space dimensionality; let this matrix be `X`.
 
         For each such key and data matrix pair, a clone of the parameter estimator is fitted with
@@ -174,21 +195,20 @@ class KeyedEstimator(pyspark.ml.Estimator):
     .. :note: While key-based grouping occurs during training, during the transformation/prediction
     phase of computation, no such aggregation occurs: the number of rows inputted as test data
     will be equal to the number of rows outputted.
-    .. :note: `spark.conf.get("spark.sql.retainGroupColumns")` assumed to be `u"true"` for both the
-    keyed estimator and the keyed model.
-    .. :note: Estimators trained, persisted, and loaded across different sklearn versions are not
-    guarnteed to work.
+    .. :note: `spark.conf.get("spark.sql.retainGroupColumns")` assumed to be `u"true"` (which is the
+    case by default for Spark 1.4+). This is necessary for both the keyed estimator and the
+    keyed model.
+    .. :note: Estimators trained, persisted, and loaded across different scikit-learn versions
+    are not guaranteed to work.
     """
 
-    paramSpecs = {
-        "sklearnEstimator": {"doc": "sklearn estimator applied to each group"},
+    _paramSpecs = {
+        "sklearnEstimator": {"doc": "scikit-learn estimator applied to each group"},
         "keyCols": {"doc": "list of key column names", "default": ["key"]},
         "xCol": {"doc": "input features column name", "default": "features"},
         "outputCol": {"doc": "output column name", "default": "output"},
         "yCol": {"doc": "optional label column name", "default": None},
         "estimatorType": {"doc": "scikit-learn estimator type", "default": "transformer"}}
-    """`paramSpecs[paramName]` returns a parameter specification dictionary with the
-    documentation and default value for the parameter of name `paramName`"""
 
     @keyword_only
     def __init__(self, sklearnEstimator=None, keyCols=["key"], xCol="features",
@@ -202,14 +222,14 @@ class KeyedEstimator(pyspark.ml.Estimator):
         If `yCol` is specified, then this is assumed to be of `"predictor"` type, else a
         `"transformer"`.
 
-        :param sklearnEstimator: An instance of a sklearn estimator, with parameters configured
+        :param sklearnEstimator: An instance of a scikit-learn estimator, with parameters configured
         as desired for each user.
         :param keyCols: Key column names list used to group data to which models are applied, where
-        implies order lexicographical importance.
+        order implies lexicographical importance.
         :param xCol: Name of column of input features used for training and
         transformation/prediction.
-        :param yCol: Optional. Specifies name of label column for regression or classification
-        pipelines.
+        :param yCol: Specifies name of label column for regression or classification pipelines.
+        Required for predictors, must be unspecified or `None` for transformers.
 
         :raise ValueError: if `sklearnEstimator` is `None`.
         :raise ValueError: if `sklearnEstimator` does not derive from `sklearn.base.BaseEstimator`.
@@ -219,7 +239,7 @@ class KeyedEstimator(pyspark.ml.Estimator):
         with a `fit()` method or an appropriate transformation/prediction method.
         """
         if sklearnEstimator is None:
-            raise ValueError("sklearnEstimator should not be unspecified or None")
+            raise ValueError("sklearnEstimator should be specified")
         if not isinstance(sklearnEstimator, sklearn.base.BaseEstimator):
             raise ValueError("sklearnEstimator should be an sklearn.base.BaseEstimator")
         if len(keyCols) == 0:
@@ -227,11 +247,13 @@ class KeyedEstimator(pyspark.ml.Estimator):
         if "estimator" in keyCols + [xCol, yCol]:
             raise ValueError("keyCols should not contain a column named \"estimator\"")
 
-        for paramName, paramSpec in KeyedEstimator.paramSpecs.items():
+        # The superclass expects Param attributes to already be set, so we only init it after
+        # doing so.
+        for paramName, paramSpec in KeyedEstimator._paramSpecs.items():
             setattr(self, paramName, Param(Params._dummy(), paramName, paramSpec["doc"]))
         super(KeyedEstimator, self).__init__()
         self._setDefault(**{paramName: paramSpec["default"]
-                            for paramName, paramSpec in KeyedEstimator.paramSpecs.items()
+                            for paramName, paramSpec in KeyedEstimator._paramSpecs.items()
                             if "default" in paramSpec})
         kwargs = KeyedEstimator._inferredParams(self.__init__._input_kwargs)
         self._set(**kwargs)
@@ -267,12 +289,17 @@ class KeyedEstimator(pyspark.ml.Estimator):
         xCol = self.getOrDefault("xCol")
         yCol = self.getOrDefault("yCol")
         isLabelled = yCol is not None
-        assert isLabelled == (self.getOrDefault("estimatorType") == "predictor")
+        estimatorType = self.getOrDefault("estimatorType")
+        assert isLabelled == (estimatorType == "predictor"), \
+            "yCol is {}, but it should {}be None for a {} estimatorType".format(
+                yCol, "not " if isLabelled else "", estimatorType)
+
         _validateXCol(dataset.schema, xCol)
 
         cols = keyCols[:]
         cols.append(xCol)
-        if isLabelled: cols.append(yCol)
+        if isLabelled:
+            cols.append(yCol)
 
         oneDimensional = _isOneDimensional(dataset.schema, xCol)
         projected = dataset.select(*cols) # also verifies all cols are present
@@ -286,12 +313,12 @@ class KeyedEstimator(pyspark.ml.Estimator):
         def fitEstimator(_, pandasDF):
             X = _prepareXCol(pandasDF[xCol], oneDimensional)
             y = pandasDF[yCol].values if isLabelled else None
-            pandasDF = None
+            # Potential optimization - del pandasDF
 
             estimatorClone = sklearn.base.clone(estimator)
             estimatorClone.fit(X, y)
             pickled = pickle.dumps(estimatorClone)
-            estimatorClone = None
+            # Potential optimization - del estimatorClone
 
             # Until SPARK-15989 is resolved, we can't output the sklearn UDT directly here.
             return pd.DataFrame.from_records([(pickled,)])
@@ -322,7 +349,7 @@ class KeyedModel(pyspark.ml.Model):
     If no estimator is present for a given key at transformation time, the prediction is null.
     """
 
-    paramSpecs = {
+    _paramSpecs = {
         "sklearnEstimator": {"doc": "sklearn estimator applied to each group"},
         "keyCols": {"doc": "list of key column names"},
         "xCol": {"doc": "input features column name"},
@@ -331,8 +358,6 @@ class KeyedModel(pyspark.ml.Model):
         "estimatorType": {"doc": "scikit-learn estimator type"},
         "keyedSklearnEstimators": {"doc": "Dataframe of fitted sklearn estimators for each key"},
         "outputType": {"doc": "SQL type for output column"}}
-    """`paramSpecs[paramName]` returns a parameter specification dictionary with the
-    documentation for the parameter of name `paramName`"""
 
     _sql_types = {v: k for k, v in _type_mappings.items()}
 
@@ -342,14 +367,21 @@ class KeyedModel(pyspark.ml.Model):
         """Used by :class:`KeyedEstimator` to generate a :class:`KeyedModel`. Not intended for
         external use."""
 
-        assert (estimatorType == "predictor") == (yCol is not None)
-        assert estimatorType == "transformer" or estimatorType == "predictor"
-        def implies(a, b): return not a or b
-        assert implies(estimatorType == "transformer", outputType == Vector.__UDT__)
-        assert len(keyCols) > 0
-        assert set(keyedSklearnEstimators.columns) == (set(keyCols) | set(["estimator"]))
+        assert (estimatorType == "predictor") == (yCol is not None), \
+            "yCol is {}, but it should {}be None for a {} estimatorType".format(
+                yCol, "not " if isLabelled else "", estimatorType)
+        assert estimatorType == "transformer" or estimatorType == "predictor", estimatorType
+        def implies(a, b):
+            return not a or b
+        assert implies(estimatorType == "transformer", outputType == Vector.__UDT__), outputType
+        assert len(keyCols) > 0, len(keyCols)
+        assert set(keyedSklearnEstimators.columns) == (set(keyCols) | set(["estimator"])), \
+            "keyedSklearnEstimator columns {} should have both key columns {} and " + \
+            "an estimator column".format(keyedSklearnEstimators.columns, keyCols)
 
-        for paramName, paramSpec in KeyedModel.paramSpecs.items():
+        # The superclass expects Param attributes to already be set, so we only init it after
+        # doing so.
+        for paramName, paramSpec in KeyedModel._paramSpecs.items():
             setattr(self, paramName, Param(Params._dummy(), paramName, paramSpec["doc"]))
         super(KeyedModel, self).__init__()
         if yCol and type(outputType) not in KeyedModel._sql_types:
@@ -377,7 +409,7 @@ class KeyedModel(pyspark.ml.Model):
         if shouldPredict:
             cast = KeyedModel._sql_types[type(outputType)]
         else:
-            assert outputType == Vector.__UDT__
+            assert outputType == Vector.__UDT__, outputType
             # The closure of applyEstimator() doesn't know ahead of time that we won't use
             # the cast value, so it tries to serialize it.
             cast = None
