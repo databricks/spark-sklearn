@@ -12,48 +12,47 @@ from pyspark.sql.types import *
 from pyspark.sql.types import Row
 
 def gapply(grouped_data, func, schema, *cols):
-    """Applies the function `func` to data grouped by key. In particular, given a dataframe
+    """Applies the function ``func`` to data grouped by key. In particular, given a dataframe
     grouped by some set of key columns key1, key2, ..., keyn, this method groups all the values
     for each row with the same key columns into a single Pandas dataframe and by default invokes
-    `func((key1, key2, ..., keyn), values)` where the number and order of the key arguments is
+    ``func((key1, key2, ..., keyn), values)`` where the number and order of the key arguments is
     determined by columns on which this instance's parent :class:`DataFrame` was grouped and
-    `values` is a `pandas.DataFrame` of columns selected by `cols`, in that order.
+    ``values`` is a ``pandas.DataFrame`` of columns selected by ``cols``, in that order.
 
-    If there is only one key then the key tuple is automatically unpacked, with `func(key, values)`
-    called.
+    If there is only one key then the key tuple is automatically unpacked, with
+    ``func(key, values)`` called.
 
-    `func` is expected to return a `pandas.DataFrame` of the specified schema `schema`,
+    ``func`` is expected to return a ``pandas.DataFrame`` of the specified schema ``schema``,
     which should be of type :class:`StructType` (output columns are of this name and order).
 
-    If `spark.conf.get("spark.sql.retainGroupColumns")` is not `u'true'`, then `func` is
-    called with an empty key tuple.
+    If ``spark.conf.get("spark.sql.retainGroupColumns")`` is not ``u'true'``, then ``func`` is
+    called with an empty key tuple (note it is set to ``u'true'`` by default).
 
-    If no `cols` are specified, then all grouped columns will be offered, in the order of the
+    If no ``cols`` are specified, then all grouped columns will be offered, in the order of the
     columns in the original dataframe. In either case, the Pandas columns will be named
     according to the DataFrame column names.
 
     The order of the rows passed in as Pandas rows is not guaranteed to be stable relative to
     the original row order.
 
-    .. :note: Users must ensure that the grouped values for every group must fit entirely in
-    memory.
-    .. :note: This method is only available if Pandas is installed.
+    :note: Users must ensure that the grouped values for every group must fit entirely in memory.
+    :note: This method is only available if Pandas is installed.
 
     :param func: a two argument function, which may be either a lambda or named function
-    :param schema: the return schema for `func`, a :class:`StructType`
+    :param schema: the return schema for ``func``, a :class:`StructType`
     :param cols: list of column names (string only)
 
-    :raise ValueError: if `"*"` is in `cols`
-    :raise ValueError: if `cols` contains duplicates
-    :raise ValueError: if `schema` is not a :class:`StructType`
-    :raise ImportError: if `pandas` module is not installed
-    :raise ImportError: if `pandas` version is too old (less than 0.7.1)
+    :raise ValueError: if ``"*"`` is in ``cols``
+    :raise ValueError: if ``cols`` contains duplicates
+    :raise ValueError: if ``schema`` is not a :class:`StructType`
+    :raise ImportError: if ``pandas`` module is not installed
+    :raise ImportError: if ``pandas`` version is too old (less than 0.7.1)
 
-    :return: a new :class:`DataFrame` with the original key columns replicated for each returned
-    value in each group's resulting pandas dataframe, the schema being the original key schema
-    prepended to `schema`, where all the resulting groups' rows are concatenated. Of course,
-    if retaining group columns is disabled, then the output will exactly match `schema` since
-    no keys can be prepended.
+    :return: the new :class:`DataFrame` with the original key columns replicated for each returned
+             value in each group's resulting pandas dataframe, the schema being the original key
+             schema prepended to ``schema``, where all the resulting groups' rows are concatenated.
+             Of course, if retaining group columns is disabled, then the output will exactly match
+             ``schema`` since no keys can be prepended.
 
     >>> import pandas as pd
     >>> from pyspark.sql import SparkSession
@@ -87,8 +86,8 @@ def gapply(grouped_data, func, schema, *cols):
     >>> def twoKeyYearlyMedian(_, vals):
     ...     return pd.DataFrame.from_records([(int(vals["earnings"].median()),)])
     >>> newSchema = StructType([df.schema["earnings"]])
-    >>> gapply(df.groupBy("course", "year"), twoKeyYearlyMedian, newSchema, "earnings") \
-            .orderBy("earnings").show()
+    >>> gapply(df.groupBy("course", "year"), twoKeyYearlyMedian, newSchema, "earnings").orderBy(
+    ...     "earnings").show()
     +------+----+--------+
     |course|year|earnings|
     +------+----+--------+

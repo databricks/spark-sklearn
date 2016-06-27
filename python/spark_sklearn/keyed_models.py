@@ -112,6 +112,8 @@ class SparkSklearnEstimator(object):
     """:class:`SparkSklearnEstimator` is a wrapper for containing scikit-learn estimators in
     dataframes - any estimators need to be stored inside the wrapper class to be properly
     serialized/deserialized in dataframe operations.
+
+    Note any method called on the estimator this object wraps may be called on the wrapper instead.
     """
 
     __UDT__ = _SparkSklearnEstimatorUDT()
@@ -125,6 +127,7 @@ class SparkSklearnEstimator(object):
 
     @property
     def estimator(self):
+        """:return: the underlying estimator"""
         return self._estimator
 
     def __getattr__(self, item):
@@ -159,49 +162,52 @@ class KeyedEstimator(pyspark.ml.Estimator):
     for what methods should be called and with what arguments, this class enumerates two different
     types of behavior:
 
-    1. `"transformer"`
+    1. ``"transformer"``
 
-        Examples: `sklearn.decomposition.PCA`, `sklearn.cluster.KMeans`
+        Examples: ``sklearn.decomposition.PCA``, ``sklearn.cluster.KMeans``
 
         In this case, the estimator will aggregate the all input features for a given key into a
         `NxD` data matrix, where `N` is the number of rows with the given key and `D` is the
-        feature space dimensionality; let this matrix be `X`.
+        feature space dimensionality; let this matrix be ``X``.
 
         For each such key and data matrix pair, a clone of the parameter estimator is fitted with
-        `estimator.fit(X)`, inducing a mapping between keys and fitted estimators: this produces
-        a fitted transformer :class:`KeyedModel`, whose Spark ML `transform` method generates an
-        output column by applying each key's fitted scikit-learn estimator's own `transform` method.
+        ``estimator.fit(X)``, inducing a mapping between keys and fitted estimators: this produces
+        a fitted transformer :class:`KeyedModel`, whose Spark ML ``transform()`` method generates an
+        output column by applying each key's fitted scikit-learn estimator's own ``transform``
+        method.
 
         The output column type for transformers will always be a :class:`DenseVector`.
 
-    2. `"predictor"`
+    2. ``"predictor"``
 
-        Examples: `sklearn.svm.LinearSVC`, `sklearn.linear_model.ElasticNet`
+        Examples: ``sklearn.svm.LinearSVC``, ``sklearn.linear_model.ElasticNet``
 
-        Here, the estimator will likewise aggregate input features into the data matrix `X`.
+        Here, the estimator will likewise aggregate input features into the data matrix ``X``.
         In addition, the label column will be aggregated in a collated manner, generating
-        a vector `y` for each key. The estimator clone will be fitted with `estimator.fit(X, y)`.
+        a vector ``y`` for each key. The estimator clone will be fitted with
+        ``estimator.fit(X, y)``.
 
-        A predictor :class:`KeyedModel` `transform`s its input dataframe by generating an output
-        column with the output of the estimator's `predict` method.
+        A predictor :class:`KeyedModel` transforms its input dataframe by generating an output
+        column with the output of the estimator's ``predict`` method.
 
         The output column type for predictors will be the same as the label column (which
-        must be an :class:`AtomicType` (else a `TypeError` will be thrown at `fit()`-time).
+        must be an :class:`AtomicType` (else a :class:`TypeError` will be thrown at ``fit()``-time).
 
-    The input column should be numeric or a vector (else a `TypeError` will be thrown at
-    `fit()`-time). Don't use "estimator" as a column name.
+    The input column should be numeric or a vector (else a :class:`TypeError` will be thrown at
+    ``fit()``-time). Don't use "estimator" as a column name.
 
-    .. :note: Clustering is *not* supported. For instance, the scikit-learn `KMeans` estimator
-    transforms its data into the cluster-mean-distance space - transform will not generate the
-    column of `KMeans` cluster labels.
-    .. :note: While key-based grouping occurs during training, during the transformation/prediction
-    phase of computation, no such aggregation occurs: the number of rows inputted as test data
-    will be equal to the number of rows outputted.
-    .. :note: `spark.conf.get("spark.sql.retainGroupColumns")` assumed to be `u"true"` (which is the
-    case by default for Spark 1.4+). This is necessary for both the keyed estimator and the
-    keyed model.
-    .. :note: Estimators trained, persisted, and loaded across different scikit-learn versions
-    are not guaranteed to work.
+    * Clustering is *not* supported.
+      For instance, the scikit-learn ``KMeans`` estimator transforms its data into the
+      cluster-mean-distance space - transform will not generate the column of ``KMeans``
+      cluster labels.
+    * Key-based grouping only occurs during training.
+      During the transformation/prediction phase of computation, the output is unaggregated:
+      the number of rows inputted as test data will be equal to the number of rows outputted.
+    * ``spark.conf.get("spark.sql.retainGroupColumns")`` assumed to be ``u"true"``.
+      This is the case by default for Spark 1.4+. This is necessary for both the keyed estimator
+      and the keyed model.
+    * Estimators trained, persisted, and loaded across different scikit-learn versions
+      are not guaranteed to work.
     """
 
     _paramSpecs = {
@@ -215,30 +221,32 @@ class KeyedEstimator(pyspark.ml.Estimator):
     @keyword_only
     def __init__(self, sklearnEstimator=None, keyCols=["key"], xCol="features",
                  outputCol="output", yCol=None):
-        """For all instances, the ordered list of `keyCols` determine the set of groups which each
-        `sklearnEstimator` is applied to.
+        """For all instances, the ordered list of ``keyCols`` determine the set of groups which each
+        ``sklearnEstimator`` is applied to.
 
-        For every unique `keyCols` value, the remaining columns are aggregated and used to train the
+        For every unique ``keyCols`` value, the remaining columns are aggregated and used to train the
         scikit-learn estimator.
 
-        If `yCol` is specified, then this is assumed to be of `"predictor"` type, else a
-        `"transformer"`.
+        If ``yCol`` is specified, then this is assumed to be of ``"predictor"`` type, else a
+        ``"transformer"``.
 
         :param sklearnEstimator: An instance of a scikit-learn estimator, with parameters configured
-        as desired for each user.
+                                 as desired for each user.
         :param keyCols: Key column names list used to group data to which models are applied, where
-        order implies lexicographical importance.
+                        order implies lexicographical importance.
         :param xCol: Name of column of input features used for training and
-        transformation/prediction.
+                     transformation/prediction.
         :param yCol: Specifies name of label column for regression or classification pipelines.
-        Required for predictors, must be unspecified or `None` for transformers.
+                     Required for predictors, must be unspecified or ``None`` for transformers.
 
-        :raise ValueError: if `sklearnEstimator` is `None`.
-        :raise ValueError: if `sklearnEstimator` does not derive from `sklearn.base.BaseEstimator`.
-        :raise ValueError: if `keyCols` is empty.
-        :raise ValueError: if any column has the name `"estimator"` (
+        :raise ValueError: if ``sklearnEstimator`` is ``None``.
+        :raise ValueError: if ``sklearnEstimator`` does not derive from
+                           ``sklearn.base.BaseEstimator``.
+        :raise ValueError: if ``keyCols`` is empty.
+        :raise ValueError: if any column has the name ``"estimator"``
         :raise ValueError: if reflection checks indicate that parameter estimator is not equipped
-        with a `fit()` method or an appropriate transformation/prediction method.
+                           with a ``fit()`` method or an appropriate transformation/prediction
+                           method.
         """
         if sklearnEstimator is None:
             raise ValueError("sklearnEstimator should be specified")
@@ -434,8 +442,9 @@ class KeyedModel(pyspark.ml.Model):
 
     @property
     def keyedModels(self):
-        """:return: Returns the `keyedSklearnEstimators` param, a :class:`DataFrame` with columns
-        `keyCols` (where each key is unique) and the column `"estimator"` containing the
-        fitted scikit-learn estimator as a SparkSklearnEstimator.
+        """
+        :return: Returns the ``keyedSklearnEstimators`` param, a :class:`DataFrame` with columns
+                 ``keyCols`` (where each key is unique) and the column ``"estimator"`` containing
+                 the fitted scikit-learn estimator as a :class:`SparkSklearnEstimator`.
         """
         return self.getOrDefault("keyedSklearnEstimators")
