@@ -176,8 +176,6 @@ class GapplyConfTests(unittest.TestCase):
     def setUpClass(cls):
         super(GapplyConfTests, cls).setUpClass()
         cls.spark = SparkSession.builder \
-                                .master("local") \
-                                .appName("Unit Tests") \
                                 .config("spark.sql.retainGroupColumns", "false") \
                                 .getOrCreate()
 
@@ -188,8 +186,6 @@ class GapplyConfTests(unittest.TestCase):
         # the config is (for some stupid reason...) cached, which would make it get in
         # the way of other tests that expect a default configuration.
         cls.spark = SparkSession.builder \
-                                .master("local") \
-                                .appName("Unit Tests") \
                                 .config("spark.sql.retainGroupColumns", "true") \
                                 .getOrCreate()
 

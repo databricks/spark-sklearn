@@ -56,6 +56,10 @@ def gapply(grouped_data, func, schema, *cols):
     no keys can be prepended.
 
     >>> import pandas as pd
+    >>> from pyspark.sql import SparkSession
+    >>> from spark_sklearn.group_apply import gapply
+    >>> from spark_sklearn.util import createLocalSparkSession
+    >>> spark = createLocalSparkSession()
     >>> df = (spark
     ...     .createDataFrame([Row(course="dotNET", year=2012, earnings=10000),
     ...                       Row(course="Java",   year=2012, earnings=20000),
@@ -94,6 +98,7 @@ def gapply(grouped_data, func, schema, *cols):
     |dotNET|2013|   48000|
     +------+----+--------+
     <BLANKLINE>
+    >>> spark.stop(); SparkSession._instantiatedContext = None
     """
     import pandas as pd
     minPandasVersion = '0.7.1'
@@ -158,18 +163,3 @@ def gapply(grouped_data, func, schema, *cols):
     explodedDF = outputAggDF.select(explode(*outputAggDF).alias("gapply"))
     # automatically retrieves nested schema column names
     return explodedDF.select("gapply.*")
-
-def _test():
-    import doctest
-    spark = SparkSession.builder \
-        .master("local") \
-        .appName("sql.group tests")\
-        .getOrCreate()
-    sc = spark.sparkContext
-    globs = globals().copy()
-    globs['spark'] = spark
-    doctest.testmod(globs=globs)
-    spark.stop()
-
-if __name__ == "__main__":
-    _test()
