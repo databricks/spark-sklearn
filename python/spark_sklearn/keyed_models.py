@@ -34,10 +34,10 @@ and aggregated dataframe.
 +---+-------------+---+
 <BLANKLINE>
 >>> km = KeyedEstimator(sklearnEstimator=LinearRegression(), yCol="y").fit(df)
+>>> def printFloat(x): return '{:.2f}'.format(round(x, 2))
 >>> def printModel(model):
-...     numeric = "{:.2f}"
-...     coef = "[" + ", ".join(numeric.format(x) for x in model.coef_) + "]"
-...     intercept = numeric.format(model.intercept_)
+...     coef = "[" + ", ".join(map(printFloat, model.coef_)) + "]"
+...     intercept = printFloat(model.intercept_)
 ...     return "intercept: {} coef: {}".format(intercept, coef)
 ...
 >>> km.keyedModels.columns
@@ -58,11 +58,11 @@ In the following, we only show one point for simplicity, but the test data can c
 points for multiple different keys.
 
 >>> input = spark.createDataFrame([(0, Vectors.dense(3, 1, -1))]).toDF("key", "features")
->>> km.transform(input).withColumn("output", udf(round)("output")).show()
+>>> km.transform(input).withColumn("output", udf(printFloat)("output")).show()
 +---+--------------+------+
 |key|      features|output|
 +---+--------------+------+
-|  0|[3.0,1.0,-1.0]|   2.0|
+|  0|[3.0,1.0,-1.0]|  2.00|
 +---+--------------+------+
 <BLANKLINE>
 >>> spark.stop(); SparkSession._instantiatedContext = None # clear hidden SparkContext for reuse
