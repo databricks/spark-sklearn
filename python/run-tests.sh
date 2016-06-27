@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Runs both doctests and unit tests by default, otherwise hands arguments over to nose.
 
 # assumes run from python/ directory
 if [ -z "$SPARK_HOME" ]; then

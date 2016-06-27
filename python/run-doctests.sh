@@ -1,4 +1,5 @@
 #!/bin/bash
+# Runs only the doctests. Additional flags are passed through to nose.
 
 # The current directory of the script.
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
