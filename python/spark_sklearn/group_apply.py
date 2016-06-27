@@ -163,7 +163,3 @@ def gapply(grouped_data, func, schema, *cols):
     explodedDF = outputAggDF.select(explode(*outputAggDF).alias("gapply"))
     # automatically retrieves nested schema column names
     return explodedDF.select("gapply.*")
-
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod()

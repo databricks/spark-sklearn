@@ -21,16 +21,16 @@ and aggregated dataframe.
 >>> spark = createLocalSparkSession()
 >>> df = spark.createDataFrame([(user,
 ...                              Vectors.dense([i, i ** 2, i ** 3]),
-...                              user + i + 2 * i ** 2 + 3 * i ** 3)
+...                              0.0 + user + i + 2 * i ** 2 + 3 * i ** 3)
 ...                             for user in range(3) for i in range(5)])
 >>> df = df.toDF("key", "features", "y")
 >>> df.where("5 < y and y < 10").sort("key", "y").show()
 +---+-------------+---+
 |key|     features|  y|
 +---+-------------+---+
-|  0|[1.0,1.0,1.0]|  6|
-|  1|[1.0,1.0,1.0]|  7|
-|  2|[1.0,1.0,1.0]|  8|
+|  0|[1.0,1.0,1.0]|6.0|
+|  1|[1.0,1.0,1.0]|7.0|
+|  2|[1.0,1.0,1.0]|8.0|
 +---+-------------+---+
 <BLANKLINE>
 >>> km = KeyedEstimator(sklearnEstimator=LinearRegression(), yCol="y").fit(df)
@@ -58,11 +58,11 @@ In the following, we only show one point for simplicity, but the test data can c
 points for multiple different keys.
 
 >>> input = spark.createDataFrame([(0, Vectors.dense(3, 1, -1))]).toDF("key", "features")
->>> km.transform(input).show()
+>>> km.transform(input).withColumn("output", udf(round)("output")).show()
 +---+--------------+------+
 |key|      features|output|
 +---+--------------+------+
-|  0|[3.0,1.0,-1.0]|     1|
+|  0|[3.0,1.0,-1.0]|   2.0|
 +---+--------------+------+
 <BLANKLINE>
 >>> spark.stop(); SparkSession._instantiatedContext = None # clear hidden SparkContext for reuse
