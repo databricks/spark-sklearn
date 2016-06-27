@@ -7,7 +7,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.types import *
 from pyspark.sql.tests import PythonOnlyPoint, PythonOnlyUDT, ExamplePoint, ExamplePointUDT
 
-from spark_sklearn.test_utils import fixtureReuseSparkSession, assertPandasAlmostEqual
+from spark_sklearn.test_utils import fixtureReuseSparkSession, assertPandasAlmostEqual, RandomTest
 from spark_sklearn import gapply
 
 def _assertPandasAlmostEqual(actual, expected):
@@ -23,7 +23,7 @@ def _emptyFunc(key, vals):
     return pd.DataFrame.from_records([])
 
 @fixtureReuseSparkSession
-class GapplyTests(unittest.TestCase):
+class GapplyTests(RandomTest):
 
     def test_gapply_empty(self):
         # Implicitly checks that pandas version is large enough (unit tests for the actual version
@@ -171,7 +171,7 @@ class GapplyTests(unittest.TestCase):
         _assertPandasAlmostEqual(actual, expected)
 
 @fixtureReuseSparkSession
-class GapplyConfTests(unittest.TestCase):
+class GapplyConfTests(RandomTest):
     @classmethod
     def setUpClass(cls):
         super(GapplyConfTests, cls).setUpClass()

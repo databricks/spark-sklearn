@@ -11,8 +11,11 @@ if sys.version_info[:2] <= (2, 6):
 else:
     import unittest
 import numpy as np
+import os
 import pandas as pd
+import random
 from scipy.sparse import csr_matrix
+import time
 
 from pyspark.sql import SparkSession
 from pyspark.ml.linalg import Vectors
@@ -87,3 +90,20 @@ def assertPandasAlmostEqual(actual, expected, convert=None, sortby=None):
     actual = normalize(actual)
     expected = normalize(expected)
     pd.util.testing.assert_almost_equal(actual, expected)
+
+# This unittest.TestCase subclass sets the random seed to be based on the time
+# that the test is run.
+#
+# If there is a SEED variable in the enviornment, then this is used as the seed.
+# Sets both random and numpy.random.
+#
+# Prints the seed to stdout before running each test case.
+class RandomTest(unittest.TestCase):
+    def setUp(self):
+        seed = os.getenv("SEED")
+        seed = np.uint32(seed if seed else time.time())
+
+        print('Random test using SEED={}'.format(seed))
+
+        random.seed(seed)
+        np.random.seed(seed)
