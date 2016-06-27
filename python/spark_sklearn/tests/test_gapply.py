@@ -7,34 +7,24 @@ from pyspark.sql import SparkSession
 from pyspark.sql.types import *
 from pyspark.sql.tests import PythonOnlyPoint, PythonOnlyUDT, ExamplePoint, ExamplePointUDT
 
-from spark_sklearn.test_utils import fixtureReuseSparkSession
+from spark_sklearn.test_utils import fixtureReuseSparkSession, assertPandasAlmostEqual
 from spark_sklearn import gapply
 
-def _assert_pdframe_equal(actual, expected):
+def _assertPandasAlmostEqual(actual, expected):
     # Points are unhashable, so pandas' assert_frame_equal can't check they're the same by default.
     # We need to convert them to something that can be checked.
     def convert_points(pt):
         if any(isinstance(pt, t) for t in [PythonOnlyPoint, ExamplePoint]):
             return (pt.x, pt.y)
         return pt
-    def normalize(pdDF):
-        converted = pdDF.apply(lambda col: col.apply(convert_points))
-        ordered = converted.sort_values(pdDF.columns.tolist())
-        # We need to drop the index after sorting because pandas remembers the pre-sort
-        # permutation in the old index. This would trigger a failure if we were to compare
-        # differently-ordered dataframes, even if they had the same sorted content.
-        unindexed = ordered.reset_index(drop=True)
-        return unindexed
-    actual = normalize(actual)
-    expected = normalize(expected)
-    pd.util.testing.assert_frame_equal(actual, expected)
+    assertPandasAlmostEqual(actual, expected, convert=convert_points)
 
 def _emptyFunc(key, vals):
     return pd.DataFrame.from_records([])
 
 @fixtureReuseSparkSession
 class GapplyTests(unittest.TestCase):
-    
+
     def test_gapply_empty(self):
         # Implicitly checks that pandas version is large enough (unit tests for the actual version
         # checking itself would require some serious mocking)
@@ -55,7 +45,7 @@ class GapplyTests(unittest.TestCase):
         emptyLongLongDF = self.spark.createDataFrame([], schema=longLongSchema)
         gd = emptyLongLongDF.groupBy("a")
         self.assertRaises(ValueError, gapply, gd, _emptyFunc, LongType(), "b")
-        
+
     def test_gapply_raises_if_bad_cols(self):
         longLongLongSchema = StructType() \
                              .add("a", LongType()).add("b", LongType()).add("c", LongType())
@@ -80,7 +70,7 @@ class GapplyTests(unittest.TestCase):
             return pd.DataFrame.from_records([(pandasAggFunction(vals["val"]),)])
         expected = pandasDF.groupby("key", as_index=False).agg({"val": pandasAggFunction})
         actual = gapply(gd, func, schema, "val").toPandas()
-        _assert_pdframe_equal(actual, expected)
+        _assertPandasAlmostEqual(actual, expected)
 
     def test_gapply_primitive_val(self):
         pandasAggFunction = lambda series: series.sum()
@@ -130,7 +120,7 @@ class GapplyTests(unittest.TestCase):
             return pd.DataFrame.from_records([(vals["val"].sum(),)])
         expected = pandasDF.groupby(["key2", "key1"], as_index=False).agg({"val": "sum"})
         actual = gapply(gd, func, schema, "val").toPandas()
-        _assert_pdframe_equal(actual, expected)
+        _assertPandasAlmostEqual(actual, expected)
 
     def test_gapply_name_change(self):
         schema = StructType().add("VAL", LongType())
@@ -143,7 +133,7 @@ class GapplyTests(unittest.TestCase):
         expected = pandasDF.groupby("key", as_index=False).agg({"val": "sum"})
         expected = expected.rename(columns={"val": "VAL"})
         actual = gapply(gd, func, schema, "val").toPandas()
-        _assert_pdframe_equal(actual, expected)
+        _assertPandasAlmostEqual(actual, expected)
 
     def test_gapply_one_col(self):
         schema = StructType().add("val2", LongType())
@@ -157,7 +147,7 @@ class GapplyTests(unittest.TestCase):
             return pd.DataFrame.from_records([(vals["val2"].sum(),)])
         expected = pandasDF.groupby("key", as_index=False).agg({"val2": "sum"})
         actual = gapply(gd, func, schema, "val2").toPandas()
-        _assert_pdframe_equal(actual, expected)
+        _assertPandasAlmostEqual(actual, expected)
 
     def test_gapply_all_cols(self):
         schema = StructType().add("val2", LongType())
@@ -172,13 +162,13 @@ class GapplyTests(unittest.TestCase):
             return pd.DataFrame.from_records([(vals["val2"].sum(),)])
         expected = pandasDF.groupby("key", as_index=False).agg({"val2": "sum"})
         actual = gapply(gd, func, schema).toPandas()
-        _assert_pdframe_equal(actual, expected)
+        _assertPandasAlmostEqual(actual, expected)
         def func(key, vals):
             assert vals.columns.tolist() == ["val2", "val1"], vals.columns
             return pd.DataFrame.from_records([(vals["val2"].sum(),)])
         gd = df.select("val2", "key", "val1").groupBy("key")
         actual = gapply(gd, func, schema).toPandas()
-        _assert_pdframe_equal(actual, expected)
+        _assertPandasAlmostEqual(actual, expected)
 
 @fixtureReuseSparkSession
 class GapplyConfTests(unittest.TestCase):
@@ -202,7 +192,7 @@ class GapplyConfTests(unittest.TestCase):
                                 .appName("Unit Tests") \
                                 .config("spark.sql.retainGroupColumns", "true") \
                                 .getOrCreate()
-    
+
     def test_gapply_no_keys(self):
         schema = StructType().add("val", LongType())
         pandasDF = pd.DataFrame.from_dict({
@@ -213,4 +203,4 @@ class GapplyConfTests(unittest.TestCase):
             return pd.DataFrame.from_records([(vals["val"].sum(),)])
         expected = pandasDF.groupby("key", as_index=False).agg({"val": "sum"})[["val"]]
         actual = gapply(gd, func, schema, "val").toPandas()
-        _assert_pdframe_equal(actual, expected)
+        _assertPandasAlmostEqual(actual, expected)

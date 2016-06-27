@@ -11,6 +11,7 @@ if sys.version_info[:2] <= (2, 6):
 else:
     import unittest
 import numpy as np
+import pandas as pd
 from scipy.sparse import csr_matrix
 
 from pyspark import SparkContext
@@ -38,7 +39,7 @@ def fixtureReuseSparkSession(cls):
             cls.spark.stop()
             # Next session will attempt to reuse the previous stopped
             # SparkContext if it's not cleared.
-            SparkSession._instantiatedContext = None 
+            SparkSession._instantiatedContext = None
         cls.spark = None
 
     cls.setUpClass = classmethod(setUpClass)
@@ -66,3 +67,22 @@ class MLlibTestCase(unittest.TestCase):
         :return:  csr_matrix with 1 row
         """
         return csr_matrix((np.array(x), np.array(range(0, len(x))), np.array([0, len(x)])))
+
+# Asserts that two Pandas dataframes are equal, with only 5 digits of precision for
+# floats.
+#
+# If convert is not None, then applies convert to each item in both dataframes first.
+#
+# Sorts rows in dataframes by sortby. If sortby is None then all columns are used.
+def assertPandasAlmostEqual(actual, expected, convert=None, sortby=None):
+    def normalize(pdDF):
+        converted = pdDF.apply(lambda col: col.apply(convert if convert else lambda x: x))
+        ordered = converted.sort_values(sortby if sortby else pdDF.columns.tolist())
+        # We need to drop the index after sorting because pandas remembers the pre-sort
+        # permutation in the old index. This would trigger a failure if we were to compare
+        # differently-ordered dataframes, even if they had the same sorted content.
+        unindexed = ordered.reset_index(drop=True)
+        return unindexed
+    actual = normalize(actual)
+    expected = normalize(expected)
+    pd.util.testing.assert_almost_equal(actual, expected)

@@ -28,11 +28,11 @@ def gapply(grouped_data, func, schema, *cols):
     If `spark.conf.get("spark.sql.retainGroupColumns")` is not `u'true'`, then `func` is
     called with an empty key tuple.
 
-    If no `cols` are specified, then all grouped columns will be offered, in the order of the 
-    columns in the original dataframe. In either case, the Pandas columns will be named 
+    If no `cols` are specified, then all grouped columns will be offered, in the order of the
+    columns in the original dataframe. In either case, the Pandas columns will be named
     according to the DataFrame column names.
 
-    The order of the rows passed in as Pandas rows is not guaranteed to be stable relative to 
+    The order of the rows passed in as Pandas rows is not guaranteed to be stable relative to
     the original row order.
 
     .. :note: Users must ensure that the grouped values for every group must fit entirely in
@@ -71,7 +71,7 @@ def gapply(grouped_data, func, schema, *cols):
     ...     return pd.DataFrame.from_records(yearly_median)
     >>> newSchema = StructType().add("year", LongType()).add("median_earnings", LongType())
     >>> gapply(df.groupBy("course"), yearlyMedian, newSchema).orderBy("median_earnings").show()
-    +------+----+---------------+                                                   
+    +------+----+---------------+
     |course|year|median_earnings|
     +------+----+---------------+
     |dotNET|2012|           7500|
@@ -150,7 +150,7 @@ def gapply(grouped_data, func, schema, *cols):
         # attempt to perserve the numpy type).
         return outputDF.values.tolist()
 
-    keyPrependedSchema = StructType(list(chain(keySchema, schema)))    
+    keyPrependedSchema = StructType(list(chain(keySchema, schema)))
     outputAggSchema = ArrayType(keyPrependedSchema, containsNull=False)
     pandasUDF = udf(pandasWrappedFunc, outputAggSchema)
     outputAggDF = inputAggDF.select(pandasUDF(*inputAggDF))
