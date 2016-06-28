@@ -377,44 +377,77 @@ Of course, if retaining group columns is disabled, then the output will exactly 
 </div>
 </dd></dl>
 
-<dl class="class">
-<dt id="spark_sklearn.SparkSklearnEstimator">
-<em class="property">class </em><code class="descclassname">spark_sklearn.</code><code class="descname">SparkSklearnEstimator</code><span class="sig-paren">(</span><em>estimator</em><span class="sig-paren">)</span><a class="headerlink" href="#spark_sklearn.SparkSklearnEstimator" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
-<p><a class="reference internal" href="#spark_sklearn.SparkSklearnEstimator" title="spark_sklearn.SparkSklearnEstimator"><code class="xref py py-class docutils literal"><span class="pre">SparkSklearnEstimator</span></code></a> is a wrapper for containing scikit-learn estimators in
-dataframes - any estimators need to be stored inside the wrapper class to be properly
-serialized/deserialized in dataframe operations.</p>
-<p>Note any method called on the estimator this object wraps may be called on the wrapper instead.</p>
-<p>Initializes with the parameter estimator.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Param:</th><td class="field-body">estimator: scikit-learn estimator to contain.</td>
-</tr>
-</tbody>
-</table>
-<dl class="attribute">
-<dt id="spark_sklearn.SparkSklearnEstimator.estimator">
-<code class="descname">estimator</code><a class="headerlink" href="#spark_sklearn.SparkSklearnEstimator.estimator" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the underlying estimator</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
+<span class="target" id="module-spark_sklearn.keyed_models"></span><div class="section" id="keyed-models">
+<h2>Keyed Models<a class="headerlink" href="#keyed-models" title="Permalink to this headline">¶</a></h2>
+<p>The use case that this addresses is where a client has a dataset with many keys - the distribution
+of distinct keys amongst the is such that the total number of rows for every key value can be
+contained completely in memory on a single machine.</p>
+<p>This assumption is particularly enabling because clients may wish to apply more intricate single-
+machine models (such as a scikit-learn estimator) to every user.</p>
+<p>The API provided here generalizes the scikit-learn estimator interface to the Spark ML one; in
+particular, it allows clients to train their scikit-learn estimators in parallel over a grouped
+and aggregated dataframe.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="k">import</span> <span class="n">LinearRegression</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyspark.ml.linalg</span> <span class="k">import</span> <span class="n">Vectors</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyspark.sql.functions</span> <span class="k">import</span> <span class="n">udf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="k">import</span> <span class="n">SparkSession</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">spark_sklearn.util</span> <span class="k">import</span> <span class="n">createLocalSparkSession</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">spark_sklearn.keyed_models</span> <span class="k">import</span> <span class="n">KeyedEstimator</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spark</span> <span class="o">=</span> <span class="n">createLocalSparkSession</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([(</span><span class="n">user</span><span class="p">,</span>
+<span class="gp">... </span>                             <span class="n">Vectors</span><span class="o">.</span><span class="n">dense</span><span class="p">([</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">i</span> <span class="o">**</span> <span class="mi">3</span><span class="p">]),</span>
+<span class="gp">... </span>                             <span class="mf">0.0</span> <span class="o">+</span> <span class="n">user</span> <span class="o">+</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">i</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">i</span> <span class="o">**</span> <span class="mi">3</span><span class="p">)</span>
+<span class="gp">... </span>                            <span class="k">for</span> <span class="n">user</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">toDF</span><span class="p">(</span><span class="s2">&quot;key&quot;</span><span class="p">,</span> <span class="s2">&quot;features&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;5 &lt; y and y &lt; 10&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="s2">&quot;key&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="go">+---+-------------+---+</span>
+<span class="go">|key|     features|  y|</span>
+<span class="go">+---+-------------+---+</span>
+<span class="go">|  0|[1.0,1.0,1.0]|6.0|</span>
+<span class="go">|  1|[1.0,1.0,1.0]|7.0|</span>
+<span class="go">|  2|[1.0,1.0,1.0]|8.0|</span>
+<span class="go">+---+-------------+---+</span>
 
-</dd></dl>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">km</span> <span class="o">=</span> <span class="n">KeyedEstimator</span><span class="p">(</span><span class="n">sklearnEstimator</span><span class="o">=</span><span class="n">LinearRegression</span><span class="p">(),</span> <span class="n">yCol</span><span class="o">=</span><span class="s2">&quot;y&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">printFloat</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{:.2f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">printModel</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">coef</span> <span class="o">=</span> <span class="s2">&quot;[&quot;</span> <span class="o">+</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">printFloat</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">coef_</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot;]&quot;</span>
+<span class="gp">... </span>    <span class="n">intercept</span> <span class="o">=</span> <span class="n">printFloat</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">intercept_</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="s2">&quot;intercept: </span><span class="si">{}</span><span class="s2"> coef: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">intercept</span><span class="p">,</span> <span class="n">coef</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">km</span><span class="o">.</span><span class="n">keyedModels</span><span class="o">.</span><span class="n">columns</span>
+<span class="go">[&#39;key&#39;, &#39;estimator&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">printedModels</span> <span class="o">=</span> <span class="n">udf</span><span class="p">(</span><span class="n">printModel</span><span class="p">)(</span><span class="s2">&quot;estimator&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;linear fit&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">km</span><span class="o">.</span><span class="n">keyedModels</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;key&quot;</span><span class="p">,</span> <span class="n">printedModels</span><span class="p">)</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="s2">&quot;key&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">truncate</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="go">+---+----------------------------------------+</span>
+<span class="go">|key|linear fit                              |</span>
+<span class="go">+---+----------------------------------------+</span>
+<span class="go">|0  |intercept: 0.00 coef: [1.00, 2.00, 3.00]|</span>
+<span class="go">|1  |intercept: 1.00 coef: [1.00, 2.00, 3.00]|</span>
+<span class="go">|2  |intercept: 2.00 coef: [1.00, 2.00, 3.00]|</span>
+<span class="go">+---+----------------------------------------+</span>
+</pre></div>
+</div>
+<p>Now that we have generated a linear model for each key, we can apply it to keyed test data.
+In the following, we only show one point for simplicity, but the test data can contain multiple
+points for multiple different keys.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">input</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="n">Vectors</span><span class="o">.</span><span class="n">dense</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))])</span><span class="o">.</span><span class="n">toDF</span><span class="p">(</span><span class="s2">&quot;key&quot;</span><span class="p">,</span> <span class="s2">&quot;features&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">km</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">&quot;output&quot;</span><span class="p">,</span> <span class="n">udf</span><span class="p">(</span><span class="n">printFloat</span><span class="p">)(</span><span class="s2">&quot;output&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="go">+---+--------------+------+</span>
+<span class="go">|key|      features|output|</span>
+<span class="go">+---+--------------+------+</span>
+<span class="go">|  0|[3.0,1.0,-1.0]|  2.00|</span>
+<span class="go">+---+--------------+------+</span>
 
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spark</span><span class="o">.</span><span class="n">stop</span><span class="p">();</span> <span class="n">SparkSession</span><span class="o">.</span><span class="n">_instantiatedContext</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1"># clear hidden SparkContext for reuse</span>
+</pre></div>
+</div>
 <dl class="class">
-<dt id="spark_sklearn.KeyedEstimator">
-<em class="property">class </em><code class="descclassname">spark_sklearn.</code><code class="descname">KeyedEstimator</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#spark_sklearn.KeyedEstimator" title="Permalink to this definition">¶</a></dt>
+<dt id="spark_sklearn.keyed_models.KeyedEstimator">
+<em class="property">class </em><code class="descclassname">spark_sklearn.keyed_models.</code><code class="descname">KeyedEstimator</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#spark_sklearn.keyed_models.KeyedEstimator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">pyspark.ml.base.Estimator</span></code></p>
-<p>A <a class="reference internal" href="#spark_sklearn.KeyedEstimator" title="spark_sklearn.KeyedEstimator"><code class="xref py py-class docutils literal"><span class="pre">KeyedEstimator</span></code></a> provides an interface for training per-key scikit-learn estimators.</p>
-<p>The <a class="reference internal" href="#spark_sklearn.KeyedEstimator" title="spark_sklearn.KeyedEstimator"><code class="xref py py-class docutils literal"><span class="pre">KeyedEstimator</span></code></a> can be part of any Spark ML pipeline provided the columns are
+<p>A <a class="reference internal" href="#spark_sklearn.keyed_models.KeyedEstimator" title="spark_sklearn.keyed_models.KeyedEstimator"><code class="xref py py-class docutils literal"><span class="pre">KeyedEstimator</span></code></a> provides an interface for training per-key scikit-learn estimators.</p>
+<p>The <a class="reference internal" href="#spark_sklearn.keyed_models.KeyedEstimator" title="spark_sklearn.keyed_models.KeyedEstimator"><code class="xref py py-class docutils literal"><span class="pre">KeyedEstimator</span></code></a> can be part of any Spark ML pipeline provided the columns are
 appropriately matched.</p>
 <p>Currently, the class provides a generalization for scikit-learn transformers and predictors
 (per-key clustering is currently unsupported). Because these scikit-learn estimators
@@ -430,7 +463,7 @@ types of behavior:</p>
 feature space dimensionality; let this matrix be <code class="docutils literal"><span class="pre">X</span></code>.</p>
 <p>For each such key and data matrix pair, a clone of the parameter estimator is fitted with
 <code class="docutils literal"><span class="pre">estimator.fit(X)</span></code>, inducing a mapping between keys and fitted estimators: this produces
-a fitted transformer <a class="reference internal" href="#spark_sklearn.KeyedModel" title="spark_sklearn.KeyedModel"><code class="xref py py-class docutils literal"><span class="pre">KeyedModel</span></code></a>, whose Spark ML <code class="docutils literal"><span class="pre">transform()</span></code> method generates an
+a fitted transformer <a class="reference internal" href="#spark_sklearn.keyed_models.KeyedModel" title="spark_sklearn.keyed_models.KeyedModel"><code class="xref py py-class docutils literal"><span class="pre">KeyedModel</span></code></a>, whose Spark ML <code class="docutils literal"><span class="pre">transform()</span></code> method generates an
 output column by applying each key&#8217;s fitted scikit-learn estimator&#8217;s own <code class="docutils literal"><span class="pre">transform</span></code>
 method.</p>
 <p>The output column type for transformers will always be a <code class="xref py py-class docutils literal"><span class="pre">DenseVector</span></code>.</p>
@@ -443,7 +476,7 @@ method.</p>
 In addition, the label column will be aggregated in a collated manner, generating
 a vector <code class="docutils literal"><span class="pre">y</span></code> for each key. The estimator clone will be fitted with
 <code class="docutils literal"><span class="pre">estimator.fit(X,</span> <span class="pre">y)</span></code>.</p>
-<p>A predictor <a class="reference internal" href="#spark_sklearn.KeyedModel" title="spark_sklearn.KeyedModel"><code class="xref py py-class docutils literal"><span class="pre">KeyedModel</span></code></a> transforms its input dataframe by generating an output
+<p>A predictor <a class="reference internal" href="#spark_sklearn.keyed_models.KeyedModel" title="spark_sklearn.keyed_models.KeyedModel"><code class="xref py py-class docutils literal"><span class="pre">KeyedModel</span></code></a> transforms its input dataframe by generating an output
 column with the output of the estimator&#8217;s <code class="docutils literal"><span class="pre">predict</span></code> method.</p>
 <p>The output column type for predictors will be the same as the label column (which
 must be an <code class="xref py py-class docutils literal"><span class="pre">AtomicType</span></code> (else a <code class="xref py py-class docutils literal"><span class="pre">TypeError</span></code> will be thrown at <code class="docutils literal"><span class="pre">fit()</span></code>-time).</p>
@@ -502,29 +535,111 @@ method.</li>
 </tr>
 </tbody>
 </table>
+<dl class="method">
+<dt id="spark_sklearn.keyed_models.KeyedEstimator.fit">
+<code class="descname">fit</code><span class="sig-paren">(</span><em>dataset</em>, <em>params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#spark_sklearn.keyed_models.KeyedEstimator.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fits a model to the input dataset with optional parameters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>dataset</strong> &#8211; input dataset, which is an instance of <code class="xref py py-class docutils literal"><span class="pre">pyspark.sql.DataFrame</span></code></li>
+<li><strong>params</strong> &#8211; an optional param map that overrides embedded params. If a list/tuple of
+param maps is given, this calls fit on each param map and returns a list of
+models.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">fitted model(s)</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 1.3.0.</span></p>
+</div>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
-<dt id="spark_sklearn.KeyedModel">
-<em class="property">class </em><code class="descclassname">spark_sklearn.</code><code class="descname">KeyedModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#spark_sklearn.KeyedModel" title="Permalink to this definition">¶</a></dt>
+<dt id="spark_sklearn.keyed_models.KeyedModel">
+<em class="property">class </em><code class="descclassname">spark_sklearn.keyed_models.</code><code class="descname">KeyedModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#spark_sklearn.keyed_models.KeyedModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">pyspark.ml.base.Model</span></code></p>
-<p>Represents a Spark ML Model, generated by a fitted <a class="reference internal" href="#spark_sklearn.KeyedEstimator" title="spark_sklearn.KeyedEstimator"><code class="xref py py-class docutils literal"><span class="pre">KeyedEstimator</span></code></a>.</p>
+<p>Represents a Spark ML Model, generated by a fitted <a class="reference internal" href="#spark_sklearn.keyed_models.KeyedEstimator" title="spark_sklearn.keyed_models.KeyedEstimator"><code class="xref py py-class docutils literal"><span class="pre">KeyedEstimator</span></code></a>.</p>
 <p>Wraps fitted scikit-learn estimators - at transformation time transforms the
-input for each key using a key-specific model. See <a class="reference internal" href="#spark_sklearn.KeyedEstimator" title="spark_sklearn.KeyedEstimator"><code class="xref py py-class docutils literal"><span class="pre">KeyedEstimator</span></code></a> documentation for
+input for each key using a key-specific model. See <a class="reference internal" href="#spark_sklearn.keyed_models.KeyedEstimator" title="spark_sklearn.keyed_models.KeyedEstimator"><code class="xref py py-class docutils literal"><span class="pre">KeyedEstimator</span></code></a> documentation for
 details.</p>
 <p>If no estimator is present for a given key at transformation time, the prediction is null.</p>
-<p>Used by <a class="reference internal" href="#spark_sklearn.KeyedEstimator" title="spark_sklearn.KeyedEstimator"><code class="xref py py-class docutils literal"><span class="pre">KeyedEstimator</span></code></a> to generate a <a class="reference internal" href="#spark_sklearn.KeyedModel" title="spark_sklearn.KeyedModel"><code class="xref py py-class docutils literal"><span class="pre">KeyedModel</span></code></a>. Not intended for
-external use.</p>
+<p>The constructor is used by <a class="reference internal" href="#spark_sklearn.keyed_models.KeyedEstimator" title="spark_sklearn.keyed_models.KeyedEstimator"><code class="xref py py-class docutils literal"><span class="pre">KeyedEstimator</span></code></a> to generate a <a class="reference internal" href="#spark_sklearn.keyed_models.KeyedModel" title="spark_sklearn.keyed_models.KeyedModel"><code class="xref py py-class docutils literal"><span class="pre">KeyedModel</span></code></a>; it
+is not intended for external use.</p>
 <dl class="attribute">
-<dt id="spark_sklearn.KeyedModel.keyedModels">
-<code class="descname">keyedModels</code><a class="headerlink" href="#spark_sklearn.KeyedModel.keyedModels" title="Permalink to this definition">¶</a></dt>
+<dt id="spark_sklearn.keyed_models.KeyedModel.keyedModels">
+<code class="descname">keyedModels</code><a class="headerlink" href="#spark_sklearn.keyed_models.KeyedModel.keyedModels" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Returns the <code class="docutils literal"><span class="pre">keyedSklearnEstimators</span></code> param, a <code class="xref py py-class docutils literal"><span class="pre">DataFrame</span></code> with columns
 <code class="docutils literal"><span class="pre">keyCols</span></code> (where each key is unique) and the column <code class="docutils literal"><span class="pre">&quot;estimator&quot;</span></code> containing
-the fitted scikit-learn estimator as a <a class="reference internal" href="#spark_sklearn.SparkSklearnEstimator" title="spark_sklearn.SparkSklearnEstimator"><code class="xref py py-class docutils literal"><span class="pre">SparkSklearnEstimator</span></code></a>.</td>
+the fitted scikit-learn estimator as a <a class="reference internal" href="#spark_sklearn.keyed_models.SparkSklearnEstimator" title="spark_sklearn.keyed_models.SparkSklearnEstimator"><code class="xref py py-class docutils literal"><span class="pre">SparkSklearnEstimator</span></code></a>.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="spark_sklearn.keyed_models.KeyedModel.transform">
+<code class="descname">transform</code><span class="sig-paren">(</span><em>dataset</em>, <em>params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#spark_sklearn.keyed_models.KeyedModel.transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transforms the input dataset with optional parameters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>dataset</strong> &#8211; input dataset, which is an instance of <code class="xref py py-class docutils literal"><span class="pre">pyspark.sql.DataFrame</span></code></li>
+<li><strong>params</strong> &#8211; an optional param map that overrides embedded params.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">transformed dataset</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 1.3.0.</span></p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="spark_sklearn.keyed_models.SparkSklearnEstimator">
+<em class="property">class </em><code class="descclassname">spark_sklearn.keyed_models.</code><code class="descname">SparkSklearnEstimator</code><span class="sig-paren">(</span><em>estimator</em><span class="sig-paren">)</span><a class="headerlink" href="#spark_sklearn.keyed_models.SparkSklearnEstimator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p><a class="reference internal" href="#spark_sklearn.keyed_models.SparkSklearnEstimator" title="spark_sklearn.keyed_models.SparkSklearnEstimator"><code class="xref py py-class docutils literal"><span class="pre">SparkSklearnEstimator</span></code></a> is a wrapper for containing scikit-learn estimators in
+dataframes - any estimators need to be stored inside the wrapper class to be properly
+serialized/deserialized in dataframe operations.</p>
+<p>Note any method called on the estimator this object wraps may be called on the wrapper instead.</p>
+<p>Initializes with the parameter estimator.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Param:</th><td class="field-body">estimator: scikit-learn estimator to contain.</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="spark_sklearn.keyed_models.SparkSklearnEstimator.estimator">
+<code class="descname">estimator</code><a class="headerlink" href="#spark_sklearn.keyed_models.SparkSklearnEstimator.estimator" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the underlying estimator</td>
 </tr>
 </tbody>
 </table>
@@ -532,6 +647,7 @@ the fitted scikit-learn estimator as a <a class="reference internal" href="#spar
 
 </dd></dl>
 
+</div>
 </div>
 <div class="section" id="indices-and-tables">
 <h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
@@ -550,7 +666,10 @@ the fitted scikit-learn estimator as a <a class="reference internal" href="#spar
         <div class="sphinxsidebarwrapper">
   <h3><a href="#">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">Welcome to spark_sklearn&#8217;s documentation!</a></li>
+<li><a class="reference internal" href="#">Welcome to spark_sklearn&#8217;s documentation!</a><ul>
+<li><a class="reference internal" href="#keyed-models">Keyed Models</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
 </ul>
 
