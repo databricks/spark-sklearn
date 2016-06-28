@@ -13,4 +13,4 @@ done
 
 export PYTHONPATH=$PYTHONPATH:$SPARK_HOME/python$LIBS:.
 
-sphinx-build doc/ doc_gen
+sphinx-build -E -a -j8 doc/ doc_gen/
