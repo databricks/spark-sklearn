@@ -15,6 +15,10 @@ Contents:
     :members:
     :show-inheritance:
 
+.. automodule:: spark_sklearn.keyed_models
+    :members:
+    :show-inheritance:
+
 Indices and tables
 ==================
 

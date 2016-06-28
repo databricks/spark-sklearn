@@ -11,7 +11,7 @@ from pyspark.sql.types import *
 from pyspark.ml.linalg import Vectors
 import sklearn.base
 
-from spark_sklearn import KeyedEstimator, KeyedModel, SparkSklearnEstimator
+from spark_sklearn.keyed_models import KeyedEstimator, KeyedModel, SparkSklearnEstimator
 from spark_sklearn.test_utils import fixtureReuseSparkSession, assertPandasAlmostEqual, RandomTest
 
 def _sortByComponentWeight(pca):
