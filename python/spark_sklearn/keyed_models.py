@@ -15,7 +15,7 @@ particular, it allows clients to train their scikit-learn estimators in parallel
 and aggregated dataframe.
 
 >>> from sklearn.linear_model import LinearRegression
->>> from sklearn.cluster import LinearRegression
+>>> from sklearn.cluster import KMeans
 >>> from pyspark.ml.linalg import Vectors, Matrices, MatrixUDT
 >>> from pyspark.sql.functions import udf
 >>> from pyspark.sql import SparkSession
