@@ -249,7 +249,7 @@ class KeyedEstimator(pyspark.ml.Estimator):
       ``"clusterer"`` interfaces. ``sklearn.cluster.KMeans``, for instance, supports both
       the cluster-labelling operation ``predict()`` and a transformation into cluster-mean-distance
       space. Such ambiguity is resolved by prefering clustering. It may be overriden by manually
-      specifying the ``estimatorType`` in the ``KeyedEstimator`` constructor.
+      specifying the ``estimatorType`` to ``transformer`` in the ``KeyedEstimator`` constructor.
     * Key-based grouping only occurs during training.
       During the transformation/prediction phase of computation, the output is unaggregated:
       the number of rows inputted as test data will be equal to the number of rows outputted.
@@ -327,7 +327,8 @@ class KeyedEstimator(pyspark.ml.Estimator):
 
     @staticmethod
     def _inferredParams(estimator, inputParams):
-        if "estimatorType" in inputParams: return inputParams
+        if "estimatorType" in inputParams:
+            return inputParams
         if "yCol" in inputParams:
             inputParams["estimatorType"] = "predictor"
         elif hasattr(estimator, "fit_predict"):
@@ -416,7 +417,7 @@ class KeyedEstimator(pyspark.ml.Estimator):
             *chain(keyCols, [extractSklearn(fitted["estimator"]).alias("estimator")]))
 
         if isLabelled:
-            assert estimatorType == "predictor"
+            assert estimatorType == "predictor", estimatorType
             outputType = dataset.schema[yCol].dataType
         elif estimatorType == "clusterer":
             outputType = LongType()
@@ -431,6 +432,7 @@ class KeyedEstimator(pyspark.ml.Estimator):
 
     @property
     def sklearnEstimatorType(self):
+        """:return: the estimator type of this keyed estimator"""
         return self.getOrDefault("estimatorType")
 
     # Dummy fit() method to inherit superclass documentation
@@ -557,6 +559,7 @@ class KeyedModel(pyspark.ml.Model):
 
     @property
     def sklearnEstimatorType(self):
+        """:return: the estimator type of this keyed model"""
         return self.getOrDefault("estimatorType")
 
     @property

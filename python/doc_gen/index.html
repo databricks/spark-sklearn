@@ -533,7 +533,7 @@ must be an <code class="xref py py-class docutils literal"><span class="pre">Ato
 <code class="docutils literal"><span class="pre">&quot;clusterer&quot;</span></code> interfaces. <code class="docutils literal"><span class="pre">sklearn.cluster.KMeans</span></code>, for instance, supports both
 the cluster-labelling operation <code class="docutils literal"><span class="pre">predict()</span></code> and a transformation into cluster-mean-distance
 space. Such ambiguity is resolved by prefering clustering. It may be overriden by manually
-specifying the <code class="docutils literal"><span class="pre">estimatorType</span></code> in the <code class="docutils literal"><span class="pre">KeyedEstimator</span></code> constructor.</li>
+specifying the <code class="docutils literal"><span class="pre">estimatorType</span></code> to <code class="docutils literal"><span class="pre">transformer</span></code> in the <code class="docutils literal"><span class="pre">KeyedEstimator</span></code> constructor.</li>
 <li>Key-based grouping only occurs during training.
 During the transformation/prediction phase of computation, the output is unaggregated:
 the number of rows inputted as test data will be equal to the number of rows outputted.</li>
@@ -610,6 +610,19 @@ models.</li>
 </div>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="spark_sklearn.keyed_models.KeyedEstimator.sklearnEstimatorType">
+<code class="descname">sklearnEstimatorType</code><a class="headerlink" href="#spark_sklearn.keyed_models.KeyedEstimator.sklearnEstimatorType" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the estimator type of this keyed estimator</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -633,6 +646,19 @@ is not intended for external use.</p>
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Returns the <code class="docutils literal"><span class="pre">keyedSklearnEstimators</span></code> param, a <code class="xref py py-class docutils literal"><span class="pre">DataFrame</span></code> with columns
 <code class="docutils literal"><span class="pre">keyCols</span></code> (where each key is unique) and the column <code class="docutils literal"><span class="pre">&quot;estimator&quot;</span></code> containing
 the fitted scikit-learn estimator as a <a class="reference internal" href="#spark_sklearn.keyed_models.SparkSklearnEstimator" title="spark_sklearn.keyed_models.SparkSklearnEstimator"><code class="xref py py-class docutils literal"><span class="pre">SparkSklearnEstimator</span></code></a>.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="spark_sklearn.keyed_models.KeyedModel.sklearnEstimatorType">
+<code class="descname">sklearnEstimatorType</code><a class="headerlink" href="#spark_sklearn.keyed_models.KeyedModel.sklearnEstimatorType" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the estimator type of this keyed model</td>
 </tr>
 </tbody>
 </table>
