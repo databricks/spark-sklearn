@@ -2,6 +2,7 @@
 from itertools import chain, repeat, cycle
 import numpy as np
 import pandas as pd
+from sklearn.cluster import DBSCAN, KMeans
 from sklearn.decomposition import PCA
 from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import LogisticRegression
@@ -27,6 +28,8 @@ def _assertPandasAlmostEqual(actual, expected, sortby):
             return x.coef_, x.intercept_
         if isinstance(x, PCA):
             return _sortByComponentWeight(x)
+        if isinstance(x, KMeans):
+            return x.cluster_centers_, x.labels_
         return x
     assertPandasAlmostEqual(actual, expected, convert=convert_estimators, sortby=sortby)
 
@@ -35,51 +38,127 @@ class KeyedModelTests(RandomTest):
 
     NDIM = 5
 
-    class _CustomTransformer(sklearn.base.BaseEstimator):
+    class _CustomClusterer(sklearn.base.BaseEstimator):
         def fit(X, y=None):
             pass
         def transform(X):
             return X
+        def fit_predict(X):
+            return np.zeros(len(X))
 
-    def test_create_no_errors(self):
-        KeyedEstimator(sklearnEstimator=PCA())
-        KeyedEstimator(sklearnEstimator=LinearRegression(), yCol="yCol")
-        KeyedEstimator(sklearnEstimator=KeyedModelTests._CustomTransformer())
+    class _CustomTransformer(sklearn.base.BaseEstimator):
+        def fit(X): # Only 1 argument expected!
+            pass
+        def transform(X):
+            return X
+        def predict(X): # Dummy predict to throw us off - all sklearn clusterers have fit_predict
+            return np.zeros(len(X))
 
-    def test_defaults(self):
-        ke = KeyedEstimator(sklearnEstimator=PCA())
-        for paramName, paramSpec in KeyedEstimator._paramSpecs.items():
-            if "default" in paramSpec:
-                self.assertEqual(paramSpec["default"], ke.getOrDefault(paramName))
+    class _CustomMissingFit(sklearn.base.BaseEstimator):
+        def transform(X):
+            return X
+
+    # Makes sure that that the parameter estimator and its generated model are of the given type.
+    # Simultaneously makes sure that an empty fit() works.
+    def checkEstimatorType(self, keyedEstimator, expectedType):
+        self.assertEqual(keyedEstimator.sklearnEstimatorType, expectedType)
+        schema = StructType().add("features", DoubleType()).add("key", LongType())
+        yCol = keyedEstimator.getOrDefault("yCol")
+        if yCol is not None:
+            schema = schema.add(yCol, DoubleType())
+        emptyDF = self.spark.createDataFrame([], schema=schema)
+        keyedModel = keyedEstimator.fit(emptyDF)
+        self.assertEqual(keyedModel.sklearnEstimatorType, expectedType)
+
+    def test_correct_estimator_type(self):
+        self.checkEstimatorType(KeyedEstimator(sklearnEstimator=PCA()), "transformer")
+
+        self.checkEstimatorType(KeyedEstimator(sklearnEstimator=LinearRegression(), yCol="y"),
+                                "predictor")
+
+        self.checkEstimatorType(KeyedEstimator(sklearnEstimator=DBSCAN()), "clusterer")
+
+        self.checkEstimatorType(KeyedEstimator(sklearnEstimator=KMeans()), "clusterer")
+
+        ke = KeyedEstimator(sklearnEstimator=KMeans(), estimatorType="transformer")
+        self.checkEstimatorType(ke, "transformer")
+
+        custom = KeyedModelTests._CustomClusterer()
+        ke = KeyedEstimator(sklearnEstimator=custom)
+        self.checkEstimatorType(ke, "clusterer")
+
+        ke = KeyedEstimator(sklearnEstimator=custom, estimatorType="transformer")
+        self.checkEstimatorType(ke, "transformer")
+
+        custom = KeyedModelTests._CustomTransformer()
+        self.checkEstimatorType(KeyedEstimator(sklearnEstimator=custom), "transformer")
 
     def test_invalid_argument(self):
+        # Need to specify sklearnEstimator
         self.assertRaises(ValueError, KeyedEstimator)
 
+        # sklearnEstimator must be a sklearn.base.Estimator
         create = lambda: KeyedEstimator(sklearnEstimator=5)
         self.assertRaises(ValueError, create)
-
         class SomeUDC(object):
             pass
         create = lambda: KeyedEstimator(sklearnEstimator=SomeUDC())
         self.assertRaises(ValueError, create)
 
+        # Must have fit()
+        create = lambda: KeyedEstimator(sklearnEstimator=KeyedModelTests._CustomMissingFit())
+        self.assertRaises(AttributeError, create)
+
+        # Must have key columns
         create = lambda: KeyedEstimator(sklearnEstimator=PCA(), keyCols=[])
         self.assertRaises(ValueError, create)
 
+        # Columns can't have "estimator" name in them
         create = lambda: KeyedEstimator(sklearnEstimator=PCA(), keyCols=["key", "estimator"])
         self.assertRaises(ValueError, create)
-
         create = lambda: KeyedEstimator(sklearnEstimator=PCA(), xCol="estimator")
         self.assertRaises(ValueError, create)
-
         create = lambda: KeyedEstimator(sklearnEstimator=LinearRegression(), yCol="estimator")
         self.assertRaises(ValueError, create)
-
         create = lambda: KeyedEstimator(sklearnEstimator=PCA(), yCol="estimator")
         self.assertRaises(ValueError, create)
 
-        create = lambda: KeyedEstimator(sklearnEstimator=LinearRegression())
+        # Presence of yCol requires predictor
+        create = lambda: KeyedEstimator(sklearnEstimator=LinearRegression(), yCol="y",
+                                        estimatorType="transformer")
         self.assertRaises(ValueError, create)
+        create = lambda: KeyedEstimator(sklearnEstimator=LinearRegression(), yCol="y",
+                                        estimatorType="clusterer")
+        self.assertRaises(ValueError, create)
+
+        # estimatorType must be one of the three options
+        create = lambda: KeyedEstimator(sklearnEstimator=PCA(), estimatorType="regressor")
+        self.assertRaises(ValueError, create)
+
+    # Checks that only the model throws an AttributeError at transform time.
+    def checkPredictionAttrError(self, keyedEstimator):
+        schema = StructType().add("features", DoubleType()).add("key", LongType())
+        yCol = keyedEstimator.getOrDefault("yCol")
+        if yCol is not None:
+            schema = schema.add(yCol, DoubleType())
+        emptyDF = self.spark.createDataFrame([], schema=schema)
+        keyedModel = keyedEstimator.fit(emptyDF)
+        self.assertRaises(AttributeError, keyedModel.transform, emptyDF)
+
+    def test_attr_error(self):
+        ke = KeyedEstimator(sklearnEstimator=PCA(), estimatorType="clusterer")
+        self.checkPredictionAttrError(ke)
+        ke = KeyedEstimator(sklearnEstimator=PCA(), yCol="y", estimatorType="predictor")
+        self.checkPredictionAttrError(ke)
+
+        ke = KeyedEstimator(sklearnEstimator=DBSCAN(), estimatorType="transformer")
+        self.checkPredictionAttrError(ke)
+        ke = KeyedEstimator(sklearnEstimator=DBSCAN(), yCol="y", estimatorType="predictor")
+        self.checkPredictionAttrError(ke)
+
+        # LinearRegression() or any other predictor would actually fail at fit-time if we used a
+        # non-empty DF with the wrong estimatorType since no y value would be passed, so
+        # scikit-learn would complain.
 
     def test_type_error(self):
         df = self.spark.createDataFrame([("a", 0), ("b", 0)]).toDF("features", "key")
@@ -97,7 +176,7 @@ class KeyedModelTests(RandomTest):
         # featureGen() should generate a np rank-1 ndarray of equal length
         # labelGen() should generate a scalar
         assert (labelGen is not None) == ("yCol" in kwargs)
-        isTransformer = labelGen is None
+        isPredictor = labelGen is not None
 
         # sklearn's LinearRegression estimator is stable even if undetermined.
         # User keys are just [0, NUSERS), repeated for each key if there are multiple columns.
@@ -111,13 +190,13 @@ class KeyedModelTests(RandomTest):
         userKeys = [[i for _ in keyCols] for i in range(NUSERS)]
         features = [[featureGen() for _ in range(nExamplesPerUser(i))] for i in range(NUSERS)]
         useless = [["useless col" for _ in range(nExamplesPerUser(i))] for i in range(NUSERS)]
-        if isTransformer:
-            labels = None
-        else:
+        if isPredictor:
             labels = [[labelGen() for _ in range(nExamplesPerUser(i))] for i in range(NUSERS)]
+        else:
+            labels = None
 
         Xs = [np.vstack(x) for x in features]
-        ys = repeat(None) if isTransformer else [np.array(y) for y in labels]
+        ys = [np.array(y) for y in labels] if isPredictor else repeat(None)
         localEstimators = [sklearn.base.clone(kwargs["sklearnEstimator"]).fit(X, y)
                            for X, y in zip(Xs, ys)]
         expectedDF = pd.DataFrame(userKeys, columns=keyCols)
@@ -152,10 +231,12 @@ class KeyedModelTests(RandomTest):
         inputDF[xCol] = flattenAndConvertNumpy(testFeatures)
         inputDF["useless"] = flattenAndConvertNumpy(useless)
 
+        estimatorType = km.sklearnEstimatorType # tested to be correct elsewhere
         def makeOutput(estimator, X):
-            if isTransformer:
+            if estimatorType == "transformer":
                 return estimator.transform(X)
             else:
+                assert estimatorType == "predictor" or estimatorType == "clusterer"
                 return estimator.predict(X).tolist()
         Xs = [np.vstack(x) for x in testFeatures]
         expectedOutput = map(makeOutput, localEstimators, Xs)
@@ -173,6 +254,15 @@ class KeyedModelTests(RandomTest):
         labelGen = None
         self.checkKeyedModelEquivalent(minExamples, featureGen, labelGen,
                                        sklearnEstimator=PCA())
+
+    def test_clusterer(self):
+        minExamples = 3
+        featureGen = lambda: np.random.random(KeyedModelTests.NDIM)
+        labelGen = None
+        self.checkKeyedModelEquivalent(minExamples, featureGen, labelGen,
+                                       sklearnEstimator=KMeans(random_state=0,
+                                                               n_clusters=minExamples))
+
 
     def test_regression_predictor(self):
         minExamples = 1

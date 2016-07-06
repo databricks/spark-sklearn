@@ -380,15 +380,16 @@ Of course, if retaining group columns is disabled, then the output will exactly 
 <span class="target" id="module-spark_sklearn.keyed_models"></span><div class="section" id="keyed-models">
 <h2>Keyed Models<a class="headerlink" href="#keyed-models" title="Permalink to this headline">¶</a></h2>
 <p>The use case that this addresses is where a client has a dataset with many keys - the distribution
-of distinct keys amongst the is such that the total number of rows for every key value can be
+of which is such that the total number of rows for with a shared key value can be
 contained completely in memory on a single machine.</p>
-<p>This assumption is particularly enabling because clients may wish to apply more intricate single-
-machine models (such as a scikit-learn estimator) to every user.</p>
+<p>This assumption is particularly enabling because clients may wish to apply more intricate
+single-machine models (such as a scikit-learn estimator) to every user.</p>
 <p>The API provided here generalizes the scikit-learn estimator interface to the Spark ML one; in
 particular, it allows clients to train their scikit-learn estimators in parallel over a grouped
 and aggregated dataframe.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="k">import</span> <span class="n">LinearRegression</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyspark.ml.linalg</span> <span class="k">import</span> <span class="n">Vectors</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sklearn.cluster</span> <span class="k">import</span> <span class="n">KMeans</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyspark.ml.linalg</span> <span class="k">import</span> <span class="n">Vectors</span><span class="p">,</span> <span class="n">Matrices</span><span class="p">,</span> <span class="n">MatrixUDT</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyspark.sql.functions</span> <span class="k">import</span> <span class="n">udf</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="k">import</span> <span class="n">SparkSession</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">spark_sklearn.util</span> <span class="k">import</span> <span class="n">createLocalSparkSession</span>
@@ -409,7 +410,9 @@ and aggregated dataframe.</p>
 <span class="go">+---+-------------+---+</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">km</span> <span class="o">=</span> <span class="n">KeyedEstimator</span><span class="p">(</span><span class="n">sklearnEstimator</span><span class="o">=</span><span class="n">LinearRegression</span><span class="p">(),</span> <span class="n">yCol</span><span class="o">=</span><span class="s2">&quot;y&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">printFloat</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{:.2f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">printFloat</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{:.2f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="gp">...</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">printModel</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="n">coef</span> <span class="o">=</span> <span class="s2">&quot;[&quot;</span> <span class="o">+</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">printFloat</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">coef_</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot;]&quot;</span>
 <span class="gp">... </span>    <span class="n">intercept</span> <span class="o">=</span> <span class="n">printFloat</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">intercept_</span><span class="p">)</span>
@@ -438,6 +441,35 @@ points for multiple different keys.</p>
 <span class="go">+---+--------------+------+</span>
 <span class="go">|  0|[3.0,1.0,-1.0]|  2.00|</span>
 <span class="go">+---+--------------+------+</span>
+</pre></div>
+</div>
+<p>Suppose we wanted to perform key-based clustering. The most common use case would require just
+fitting our model.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">km</span> <span class="o">=</span> <span class="n">KeyedEstimator</span><span class="p">(</span><span class="n">sklearnEstimator</span><span class="o">=</span><span class="n">KMeans</span><span class="p">(</span><span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_clusters</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">getCentroids</span><span class="p">(</span><span class="n">kmeans</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">n_clusters</span><span class="p">,</span> <span class="n">n_features</span> <span class="o">=</span> <span class="n">kmeans</span><span class="o">.</span><span class="n">cluster_centers_</span><span class="o">.</span><span class="n">shape</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">Matrices</span><span class="o">.</span><span class="n">dense</span><span class="p">(</span><span class="n">n_clusters</span><span class="p">,</span> <span class="n">n_features</span><span class="p">,</span> <span class="n">kmeans</span><span class="o">.</span><span class="n">cluster_centers_</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">centroids</span> <span class="o">=</span> <span class="n">udf</span><span class="p">(</span><span class="n">getCentroids</span><span class="p">,</span> <span class="n">MatrixUDT</span><span class="p">())(</span><span class="s2">&quot;estimator&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;centroids&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">km</span><span class="o">.</span><span class="n">keyedModels</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;key&quot;</span><span class="p">,</span> <span class="n">centroids</span><span class="p">)</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="s2">&quot;key&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="go">+---+--------------------+</span>
+<span class="go">|key|           centroids|</span>
+<span class="go">+---+--------------------+</span>
+<span class="go">|  0|4.0   64.0  3.5  ...|</span>
+<span class="go">|  1|4.0   64.0  3.5  ...|</span>
+<span class="go">|  2|4.0   64.0  3.5  ...|</span>
+<span class="go">+---+--------------------+</span>
+</pre></div>
+</div>
+<p>Usually, this is all we want. In the case of <code class="docutils literal"><span class="pre">KMeans</span></code>, we can also predict cluster labels,
+since the scikit-learn estimator provides this functionality. Note this is not the case for
+some other clusterers, such as <code class="docutils literal"><span class="pre">DBSCAN</span></code>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">km</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span><span class="o">.</span><span class="n">withColumnRenamed</span><span class="p">(</span><span class="s2">&quot;output&quot;</span><span class="p">,</span> <span class="s2">&quot;cluster label&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="go">+---+--------------+-------------+</span>
+<span class="go">|key|      features|cluster label|</span>
+<span class="go">+---+--------------+-------------+</span>
+<span class="go">|  0|[3.0,1.0,-1.0]|            1|</span>
+<span class="go">+---+--------------+-------------+</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">spark</span><span class="o">.</span><span class="n">stop</span><span class="p">();</span> <span class="n">SparkSession</span><span class="o">.</span><span class="n">_instantiatedContext</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1"># clear hidden SparkContext for reuse</span>
 </pre></div>
@@ -449,10 +481,10 @@ points for multiple different keys.</p>
 <p>A <a class="reference internal" href="#spark_sklearn.keyed_models.KeyedEstimator" title="spark_sklearn.keyed_models.KeyedEstimator"><code class="xref py py-class docutils literal"><span class="pre">KeyedEstimator</span></code></a> provides an interface for training per-key scikit-learn estimators.</p>
 <p>The <a class="reference internal" href="#spark_sklearn.keyed_models.KeyedEstimator" title="spark_sklearn.keyed_models.KeyedEstimator"><code class="xref py py-class docutils literal"><span class="pre">KeyedEstimator</span></code></a> can be part of any Spark ML pipeline provided the columns are
 appropriately matched.</p>
-<p>Currently, the class provides a generalization for scikit-learn transformers and predictors
-(per-key clustering is currently unsupported). Because these scikit-learn estimators
+<p>Currently, the class provides a generalization for scikit-learn transformers, clusterers,
+and predictors. Because these scikit-learn estimators
 all derive from the same base type (yielding the same API), yet have different expectations
-for what methods should be called and with what arguments, this class enumerates two different
+for what methods should be called and with what arguments, this class enumerates three different
 types of behavior:</p>
 <ol class="arabic">
 <li><p class="first"><code class="docutils literal"><span class="pre">&quot;transformer&quot;</span></code></p>
@@ -467,6 +499,17 @@ a fitted transformer <a class="reference internal" href="#spark_sklearn.keyed_mo
 output column by applying each key&#8217;s fitted scikit-learn estimator&#8217;s own <code class="docutils literal"><span class="pre">transform</span></code>
 method.</p>
 <p>The output column type for transformers will always be a <code class="xref py py-class docutils literal"><span class="pre">DenseVector</span></code>.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">&quot;clusterer&quot;</span></code></p>
+<blockquote>
+<div><p>Examples: <code class="docutils literal"><span class="pre">sklearn.cluster.DBSCAN</span></code>, <code class="docutils literal"><span class="pre">sklearn.cluster.KMeans</span></code></p>
+<p>As before, the data will be aggregated into a design matrix <code class="docutils literal"><span class="pre">X</span></code>, and
+<code class="docutils literal"><span class="pre">estimator.fit(X)</span></code> will be called for each key group.</p>
+<p>The difference between a <code class="docutils literal"><span class="pre">&quot;transformer&quot;</span></code> and <code class="docutils literal"><span class="pre">&quot;clusterer&quot;</span></code> lies in their prediction
+behavior: a clusterer will call <code class="docutils literal"><span class="pre">estimator.predict()</span></code> whereas a transformer refers
+to the <code class="docutils literal"><span class="pre">transform</span></code> method.</p>
+<p>The output column type for clusterers will always be of <code class="xref py py-class docutils literal"><span class="pre">LongType</span></code>.</p>
 </div></blockquote>
 </li>
 <li><p class="first"><code class="docutils literal"><span class="pre">&quot;predictor&quot;</span></code></p>
@@ -486,10 +529,11 @@ must be an <code class="xref py py-class docutils literal"><span class="pre">Ato
 <p>The input column should be numeric or a vector (else a <code class="xref py py-class docutils literal"><span class="pre">TypeError</span></code> will be thrown at
 <code class="docutils literal"><span class="pre">fit()</span></code>-time). Don&#8217;t use &#8220;estimator&#8221; as a column name.</p>
 <ul class="simple">
-<li>Clustering is <em>not</em> supported.
-For instance, the scikit-learn <code class="docutils literal"><span class="pre">KMeans</span></code> estimator transforms its data into the
-cluster-mean-distance space - transform will not generate the column of <code class="docutils literal"><span class="pre">KMeans</span></code>
-cluster labels.</li>
+<li>In certain cases, a scikit-learn estimator may support both <code class="docutils literal"><span class="pre">&quot;transformer&quot;</span></code> and
+<code class="docutils literal"><span class="pre">&quot;clusterer&quot;</span></code> interfaces. <code class="docutils literal"><span class="pre">sklearn.cluster.KMeans</span></code>, for instance, supports both
+the cluster-labelling operation <code class="docutils literal"><span class="pre">predict()</span></code> and a transformation into cluster-mean-distance
+space. Such ambiguity is resolved by prefering clustering. It may be overriden by manually
+specifying the <code class="docutils literal"><span class="pre">estimatorType</span></code> to <code class="docutils literal"><span class="pre">transformer</span></code> in the <code class="docutils literal"><span class="pre">KeyedEstimator</span></code> constructor.</li>
 <li>Key-based grouping only occurs during training.
 During the transformation/prediction phase of computation, the output is unaggregated:
 the number of rows inputted as test data will be equal to the number of rows outputted.</li>
@@ -501,10 +545,12 @@ are not guaranteed to work.</li>
 </ul>
 <p>For all instances, the ordered list of <code class="docutils literal"><span class="pre">keyCols</span></code> determine the set of groups which each
 <code class="docutils literal"><span class="pre">sklearnEstimator</span></code> is applied to.</p>
-<p>For every unique <code class="docutils literal"><span class="pre">keyCols</span></code> value, the remaining columns are aggregated and used to train the
-scikit-learn estimator.</p>
-<p>If <code class="docutils literal"><span class="pre">yCol</span></code> is specified, then this is assumed to be of <code class="docutils literal"><span class="pre">&quot;predictor&quot;</span></code> type, else a
-<code class="docutils literal"><span class="pre">&quot;transformer&quot;</span></code>.</p>
+<p>For every unique <code class="docutils literal"><span class="pre">keyCols</span></code> value, the remaining columns are aggregated and used to train
+the scikit-learn estimator.</p>
+<p><code class="docutils literal"><span class="pre">estimatorType</span></code> inference is conducted as follows: if <code class="docutils literal"><span class="pre">yCol</span></code> is specified, then this is
+assumed to be of <code class="docutils literal"><span class="pre">&quot;predictor&quot;</span></code> type, else a <code class="docutils literal"><span class="pre">&quot;transformer&quot;</span></code> or a <code class="docutils literal"><span class="pre">&quot;clusterer&quot;</span></code>,
+depending on the estimator having the <code class="docutils literal"><span class="pre">transform()</span></code> or <code class="docutils literal"><span class="pre">fit_predict()</span></code> attributes, with
+<code class="docutils literal"><span class="pre">&quot;clusterer&quot;</span></code> being chosen in case both attributes are present.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -518,6 +564,10 @@ order implies lexicographical importance.</li>
 transformation/prediction.</li>
 <li><strong>yCol</strong> &#8211; Specifies name of label column for regression or classification pipelines.
 Required for predictors, must be unspecified or <code class="docutils literal"><span class="pre">None</span></code> for transformers.</li>
+<li><strong>estimatorType</strong> &#8211; Identifies the type of scikit-learn estimator being used, which
+changes the interface the <code class="docutils literal"><span class="pre">sklearnEstimator</span></code> is expected to have.
+This parameter&#8217;s value is inferred using reflection by default,
+but may be manually overriden.</li>
 </ul>
 </td>
 </tr>
@@ -527,9 +577,8 @@ Required for predictors, must be unspecified or <code class="docutils literal"><
 <code class="docutils literal"><span class="pre">sklearn.base.BaseEstimator</span></code>.</li>
 <li><strong>ValueError</strong> &#8211; if <code class="docutils literal"><span class="pre">keyCols</span></code> is empty.</li>
 <li><strong>ValueError</strong> &#8211; if any column has the name <code class="docutils literal"><span class="pre">&quot;estimator&quot;</span></code></li>
-<li><strong>ValueError</strong> &#8211; if reflection checks indicate that parameter estimator is not equipped
-with a <code class="docutils literal"><span class="pre">fit()</span></code> method or an appropriate transformation/prediction
-method.</li>
+<li><strong>AttributeError</strong> &#8211; if reflection checks indicate that parameter estimator is not equipped
+with a <code class="docutils literal"><span class="pre">fit()</span></code> method.</li>
 </ul>
 </td>
 </tr>
@@ -561,6 +610,19 @@ models.</li>
 </div>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="spark_sklearn.keyed_models.KeyedEstimator.sklearnEstimatorType">
+<code class="descname">sklearnEstimatorType</code><a class="headerlink" href="#spark_sklearn.keyed_models.KeyedEstimator.sklearnEstimatorType" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the estimator type of this keyed estimator</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -584,6 +646,19 @@ is not intended for external use.</p>
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Returns the <code class="docutils literal"><span class="pre">keyedSklearnEstimators</span></code> param, a <code class="xref py py-class docutils literal"><span class="pre">DataFrame</span></code> with columns
 <code class="docutils literal"><span class="pre">keyCols</span></code> (where each key is unique) and the column <code class="docutils literal"><span class="pre">&quot;estimator&quot;</span></code> containing
 the fitted scikit-learn estimator as a <a class="reference internal" href="#spark_sklearn.keyed_models.SparkSklearnEstimator" title="spark_sklearn.keyed_models.SparkSklearnEstimator"><code class="xref py py-class docutils literal"><span class="pre">SparkSklearnEstimator</span></code></a>.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="spark_sklearn.keyed_models.KeyedModel.sklearnEstimatorType">
+<code class="descname">sklearnEstimatorType</code><a class="headerlink" href="#spark_sklearn.keyed_models.KeyedModel.sklearnEstimatorType" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the estimator type of this keyed model</td>
 </tr>
 </tbody>
 </table>
