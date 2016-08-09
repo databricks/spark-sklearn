@@ -8,8 +8,7 @@ cache:
     - $HOME/.cache/spark-versions
 env:
   matrix:
-    # TODO: remove snapshot dependency after 2.0.0 release
-    - SPARK_VERSION="2.0.1-SNAPSHOT" SPARK_BUILD="spark-$SPARK_VERSION-bin-hadoop2.6" SPARK_BUILD_URL="http://people.apache.org/~pwendell/spark-nightly/spark-branch-2.0-bin/latest/$SPARK_BUILD.tgz"
+    - SPARK_VERSION="2.0.0" SPARK_BUILD="spark-$SPARK_VERSION-bin-hadoop2.7" SPARK_BUILD_URL="http://d3kbcqa49mib13.cloudfront.net/$SPARK_BUILD.tgz"
 
 before_install:
  - ./bin/download_travis_dependencies.sh
