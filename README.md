@@ -64,7 +64,12 @@ More extensive documentation (generated with Sphinx) is available in the `python
 ## Changelog
 
 - 2015-12-10 First public release (0.1)
+
 - 2016-01-10 Package fix release (0.1.1)
 
 - 0.1.2:
   - python 3 support
+
+- 2016-08-16 Minor release:
+   1. the official Spark target is Spark 0.2
+   2. support for keyed models
