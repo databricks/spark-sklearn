@@ -160,6 +160,7 @@ class GridSearchCV(BaseSearchCV):
             refit, cv, verbose, pre_dispatch, error_score)
         self.sc = sc
         self.param_grid = param_grid
+        self.grid_scores_ = None
         _check_param_grid(param_grid)
 
     def fit(self, X, y=None):

@@ -21,7 +21,8 @@ This package is released under the Apache 2.0 license. See the LICENSE file.
 
 This package has the following requirements:
  - a recent version of scikit-learn. Version 0.17 has been tested, older versions may work too.
- - Spark >= 1.5. Spark may be downloaded from the [Spark official website](http://spark.apache.org/). In order to use spark-sklearn, you need to use the pyspark interpreter or another Spark-compliant python interpreter. See the [Spark guide](https://spark.apache.org/docs/latest/programming-guide.html#overview) for more details.
+ - Spark >= 2.0. Spark may be downloaded from the
+ [Spark official website](http://spark.apache.org/). In order to use spark-sklearn, you need to use the pyspark interpreter or another Spark-compliant python interpreter. See the [Spark guide](https://spark.apache.org/docs/latest/programming-guide.html#overview) for more details.
  - [nose](https://nose.readthedocs.org) (testing dependency only)
 
 This package is available on PYPI:
@@ -63,4 +64,7 @@ More extensive documentation (generated with Sphinx) is available in the `python
 ## Changelog
 
 - 2015-12-10 First public release (0.1)
+- 2016-08-16 Minor release:
+   1. the official Spark target is Spark 0.2
+   2. support for keyed models
 
