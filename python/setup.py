@@ -38,7 +38,7 @@ setup(
 	description="Integration tools for running scikit-learn on Spark",
 	license="Apache 2.0",
 	url="https://github.com/databricks/spark-sklearn",
-	version="0.1.2",
+	version="0.2.0",
 	author="Joseph Bradley",
 	author_email="joseph@databricks.com",
 	maintainer="Tim Hunter",
