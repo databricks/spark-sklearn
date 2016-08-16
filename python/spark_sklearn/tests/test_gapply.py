@@ -33,7 +33,6 @@ class GapplyTests(RandomTest):
         gd = emptyLongLongDF.groupBy("a")
         self.assertEqual(gapply(gd, _emptyFunc, longLongSchema, "b").collect(), [])
 
-    @unittest.skip("Generating an empty dataframe after exploding fails, see SPARK-16179")
     def test_gapply_empty_schema(self):
         longLongSchema = StructType().add("a", LongType()).add("b", LongType())
         emptyLongLongDF = self.spark.createDataFrame([(1, 2)], schema=longLongSchema)
@@ -86,7 +85,10 @@ class GapplyTests(RandomTest):
         dataGen = lambda: (random.randrange(GapplyTests.NVALS), random.randrange(GapplyTests.NVALS))
         self.checkGapplyEquivalentToPandas(pandasAggFunction, dataType, dataGen)
 
-    @unittest.skip("python only UDTs can't be nested in arraytypes for now, see SPARK-15989")
+    @unittest.skip("""
+    python only UDTs can't be nested in arraytypes for now, see SPARK-15989
+    this is only available starting in Spark 2.0.1
+    """)
     def test_gapply_python_only_udt_val(self):
         def pandasAggFunction(series):
             x = float(series.apply(lambda pt: int(pt.x) + int(pt.y)).sum())

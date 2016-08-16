@@ -1,4 +1,4 @@
-#Scikit-learn integration package for Apache Spark
+# Scikit-learn integration package for Apache Spark
 
 This package contains some tools to integrate the [Spark computing framework](http://spark.apache.org/) with the popular [scikit-learn machine library](http://scikit-learn.org/stable/). Among other tools:
  - train and evaluate multiple scikit-learn models in parallel. It is a distributed analog to the [multicore implementation](https://pythonhosted.org/joblib/parallel.html) included by default in [scikit-learn](http://scikit-learn.org/stable/).
@@ -27,7 +27,7 @@ This project is also available as as [Spark package](http://spark-packages.org/p
 
 The developer version has the following requirements:
  - a recent release of scikit-learn. Release 0.17 has been tested, older versions may work too.
- - Spark >= 2.0. Spark may be downloaded from the [Spark official website](http://spark.apache.org/). In order to use this package, you need to use the pyspark interpreter or another Spark-compliant python interpreter. See the [Spark guide](https://spark.apache.org/docs/latest/programming-guide.html#overview) for more details. NOTICE: currently, this package uses the nightly 2.0.0 snapshot, available [here](http://people.apache.org/~pwendell/spark-nightly/spark-branch-2.0-bin/latest/) (TODO: remove reference after 2.0.0 release).
+ - Spark >= 2.0. Spark may be downloaded from the [Spark official website](http://spark.apache.org/). In order to use this package, you need to use the pyspark interpreter or another Spark-compliant python interpreter. See the [Spark guide](https://spark.apache.org/docs/latest/programming-guide.html#overview) for more details.
  - [nose](https://nose.readthedocs.org) (testing dependency only)
  - Pandas, if using the Pandas integration or testing. Pandas==0.18 has been tested.
 
