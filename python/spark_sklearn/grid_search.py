@@ -7,6 +7,7 @@ import sys
 from itertools import product
 from collections import Sized, Mapping, namedtuple, defaultdict, Sequence
 from functools import partial
+import warnings
 import numpy as np
 from scipy.stats import rankdata
 
@@ -201,8 +202,22 @@ class GridSearchCV(BaseSearchCV):
 
     #ef _fit(self, X, y, parameter_iterable, groups=None):
     def fit(self, X, y=None, groups=None, **fit_params):
+
+      if self.fit_params is not None:
+        warnings.warn('"fit_params" as a constructor argument was '
+                      'deprecated in version 0.19 and will be removed '
+                      'in version 0.21. Pass fit parameters to the '
+                      '"fit" method instead.', DeprecationWarning)
+        if fit_params:
+            warnings.warn('Ignoring fit_params passed as a constructor '
+                          'argument in favor of keyword arguments to '
+                          'the "fit" method.', RuntimeWarning)
+        else:
+            fit_params = self.fit_params
+
         estimator = self.estimator
         cv = check_cv(self.cv, y, classifier=is_classifier(estimator))
+
         self.scorer_ = check_scoring(self.estimator, scoring=self.scoring)
 
         X, y, groups = indexable(X, y, groups)
@@ -212,10 +227,10 @@ class GridSearchCV(BaseSearchCV):
         #candidate_params = parameter_iterable # change later
         candidate_params = ParameterGrid(self.param_grid)
         n_candidates = len(candidate_params)
-        # if self.verbose > 0:
-        #     print("Fitting {0} folds for each of {1} candidates, totalling"
-        #           " {2} fits".format(n_splits, n_candidates,
-        #                              n_candidates * n_splits))
+        if self.verbose > 0:
+            print("Fitting {0} folds for each of {1} candidates, totalling"
+                  " {2} fits".format(n_splits, n_candidates,
+                                     n_candidates * n_splits))
 
         base_estimator = clone(self.estimator)
 
