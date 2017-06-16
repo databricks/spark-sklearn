@@ -38,9 +38,14 @@ class CVTests2(MLlibTestCase):
         svr = svm.SVC()
         clf = grid_search.GridSearchCV(svr, parameters)
         clf.fit(iris.data, iris.target)
+        # clf = grid_search.GridSearchCV(svr)
+        # clf.fit(iris.data, iris.target, parameters)
+
 
         clf2 = GridSearchCV(self.sc, svr, parameters)
         clf2.fit(iris.data, iris.target)
+        # clf2 = GridSearchCV(self.sc, svr)
+        # clf2.fit(iris.data, iris.target, parameters)
 
         b1 = clf.estimator
         b2 = clf2.estimator
@@ -61,13 +66,17 @@ class CVTests(MLlibTestCase):
             'lasso__alpha': (0.001, 0.005, 0.01)
         }
         grid_search = GridSearchCV(self.sc, pipeline, parameters)
+        #grid_search = GridSearchCV(self.sc, pipeline)
         X = scipy.sparse.vstack(map(lambda x: self.list2csr([x, x+1.0]), range(0, 100)))
         y = np.array(list(range(0, 100))).reshape((100,1))
         skl_gs = grid_search.fit(X, y)
-        assert len(skl_gs.grid_scores_) == len(parameters['lasso__alpha'])
+        #skl_gs = grid_search.fit(X, y, parameters)
+        #assert len(skl_gs.grid_scores_) == len(parameters['lasso__alpha'])
+        #print "CV RESULTS KEYS:",skl_gs.cv_results_.keys()
+        assert len(skl_gs.cv_results_['params']) == len(parameters['lasso__alpha'])
         # TODO
-        for gs in skl_gs.grid_scores_:
-            pass # assert(gs.)
+        # for gs in skl_gs.grid_scores_:
+        #     pass # assert(gs.)
 
     def test_cv_pipeline(self):
         pipeline = SKL_Pipeline([
@@ -79,6 +88,7 @@ class CVTests(MLlibTestCase):
             'lasso__alpha': (0.001, 0.005, 0.01)
         }
         grid_search = GridSearchCV(self.sc, pipeline, parameters)
+        #grid_search = GridSearchCV(self.sc, pipeline)
         data = [('hi there', 0.0),
                 ('what is up', 1.0),
                 ('huh', 1.0),
@@ -91,10 +101,12 @@ class CVTests(MLlibTestCase):
                 ('too cool', 2.0)]
         df = self.sql.createDataFrame(data, ["review", "rating"]).toPandas()
         skl_gs = grid_search.fit(df.review.values, df.rating.values)
-        assert len(skl_gs.grid_scores_) == len(parameters['lasso__alpha'])
+        #skl_gs = grid_search.fit(df.review.values, df.rating.values, parameters)
+        #assert len(skl_gs.grid_scores_) == len(parameters['lasso__alpha'])
+        assert len(skl_gs.cv_results_['params']) == len(parameters['lasso__alpha'])
         # TODO
-        for gs in skl_gs.grid_scores_:
-            pass # assert(gs.)
+        # for gs in skl_gs.grid_scores_:
+        #     pass # assert(gs.)
 
     @unittest.skip("disable this test until we have numpy <-> dataframe conversion")
     def test_cv_lasso_with_mllib_featurization(self):
@@ -127,8 +139,11 @@ class CVTests(MLlibTestCase):
 
         grid_search = GridSearchCV(self.sc, pipeline, parameters)
         skl_gs = grid_search.fit(df.review.values, df.rating.values)
+        #grid_search = GridSearchCV(self.sc, pipeline)
+        #skl_gs = grid_search.fit(df.review.values, df.rating.values, parameters)
 
-        assert len(skl_gs.grid_scores_) == len(parameters['lasso__alpha'])
+        #assert len(skl_gs.grid_scores_) == len(parameters['lasso__alpha'])
+        assert len(skl_gs.cv_results_['params']) == len(parameters['lasso__alpha'])
         # TODO
-        for gs in skl_gs.grid_scores_:
-            pass
+        # for gs in skl_gs.grid_scores_:
+        #     pass
