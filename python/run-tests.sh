@@ -10,4 +10,4 @@ if [ "$#" = 0 ]; then
 else
     ARGS="$@"
 fi
-exec nosetests $ARGS --where $DIR
+exec nosetests $ARGS --where $DIR --nocapture
