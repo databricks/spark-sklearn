@@ -61,7 +61,6 @@ class CVTests(MLlibTestCase):
             'lasso__alpha': (0.001, 0.005, 0.01)
         }
         grid_search = GridSearchCV(self.sc, pipeline, parameters)
-        #grid_search = GridSearchCV(self.sc, pipeline)
         X = scipy.sparse.vstack(map(lambda x: self.list2csr([x, x+1.0]), range(0, 100)))
         y = np.array(list(range(0, 100))).reshape((100,1))
         skl_gs = grid_search.fit(X, y)
@@ -77,7 +76,6 @@ class CVTests(MLlibTestCase):
             'lasso__alpha': (0.001, 0.005, 0.01)
         }
         grid_search = GridSearchCV(self.sc, pipeline, parameters)
-        #grid_search = GridSearchCV(self.sc, pipeline)
         data = [('hi there', 0.0),
                 ('what is up', 1.0),
                 ('huh', 1.0),
