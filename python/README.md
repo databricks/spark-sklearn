@@ -20,7 +20,7 @@ This package is released under the Apache 2.0 license. See the LICENSE file.
 ## Installation
 
 This package has the following requirements:
- - a recent version of scikit-learn. Version 0.17 has been tested, older versions may work too.
+ - Sklearn version >= .18.1
  - Spark >= 2.1.1 Spark may be downloaded from the
  [Spark official website](http://spark.apache.org/). In order to use spark-sklearn, you need to use the pyspark interpreter or another Spark-compliant python interpreter. See the [Spark guide](https://spark.apache.org/docs/latest/programming-guide.html#overview) for more details.
  - [nose](https://nose.readthedocs.org) (testing dependency only)
