@@ -27,7 +27,7 @@ This project is also available as as [Spark package](http://spark-packages.org/p
 
 The developer version has the following requirements:
  - a recent release of scikit-learn. Release 0.17 has been tested, older versions may work too.
- - Spark >= 2.0. Spark may be downloaded from the [Spark official website](http://spark.apache.org/). In order to use this package, you need to use the pyspark interpreter or another Spark-compliant python interpreter. See the [Spark guide](https://spark.apache.org/docs/latest/programming-guide.html#overview) for more details.
+ - Spark >= 2.1. Spark may be downloaded from the [Spark official website](http://spark.apache.org/). In order to use this package, you need to use the pyspark interpreter or another Spark-compliant python interpreter. See the [Spark guide](https://spark.apache.org/docs/latest/programming-guide.html#overview) for more details.
  - [nose](https://nose.readthedocs.org) (testing dependency only)
  - Pandas, if using the Pandas integration or testing. Pandas==0.18 has been tested.
 
