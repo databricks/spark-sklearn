@@ -8,19 +8,18 @@ from itertools import product
 from collections import Sized, Mapping, namedtuple, defaultdict, Sequence
 from functools import partial
 import warnings
+
 import numpy as np
 from scipy.stats import rankdata
 
 from sklearn.base import BaseEstimator, is_classifier, clone
+from sklearn.metrics.scorer import check_scoring
 from sklearn.model_selection import KFold, check_cv, ParameterGrid
 from sklearn.model_selection._validation import _fit_and_score
-from sklearn.utils.metaestimators import _safe_split
 from sklearn.model_selection._search import BaseSearchCV, _check_param_grid, _CVScoreTuple
-from sklearn.metrics.scorer import check_scoring
 from sklearn.utils.fixes import MaskedArray
+from sklearn.utils.metaestimators import _safe_split
 from sklearn.utils.validation import _num_samples, indexable
-
-from sklearn.externals.joblib import Parallel, delayed
 
 
 class GridSearchCV(BaseSearchCV):
