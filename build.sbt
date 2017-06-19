@@ -3,7 +3,7 @@
 
 scalaVersion := "2.10.4"
 
-sparkVersion := "2.1.0"
+sparkVersion := "2.1.1"
 
 spName := "databricks/spark-sklearn"
 
