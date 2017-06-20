@@ -5,7 +5,7 @@ Class for parallelizing GridSearchCV jobs in scikit-learn
 import sys
 
 from itertools import product
-from collections import Sized, Mapping, namedtuple, defaultdict, Sequence
+from collections import defaultdict
 from functools import partial
 import warnings
 
@@ -23,89 +23,103 @@ from sklearn.utils.validation import _num_samples, indexable
 
 
 class GridSearchCV(BaseSearchCV):
-    """Exhaustive search over specified parameter values for an estimator, using Spark to
-    distribute the computations.
-
+    """Exhaustive search over specified parameter values for an estimator.
+    
     Important members are fit, predict.
-
-    GridSearchCV implements a "fit" method and a "predict" method like
-    any classifier except that the parameters of the classifier
-    used to predict is optimized by cross-validation.
-
+    
+    GridSearchCV implements a "fit" and a "score" method.
+    It also implements "predict", "predict_proba", "decision_function",
+    "transform" and "inverse_transform" if they are implemented in the
+    estimator used.
+    
+    The parameters of the estimator used to apply these methods are optimized
+    by cross-validated grid-search over a parameter grid.
+    Read more in the :ref:`User Guide <grid_search>`.
+    
     Parameters
     ----------
-    sc: the spark context
-
-    estimator : object type that implements the "fit" and "predict" methods
-        A object of that type is instantiated for each grid point.
-
+    estimator : estimator object.
+        This is assumed to implement the scikit-learn estimator interface.
+        Either estimator needs to provide a ``score`` function,
+        or ``scoring`` must be passed.
+    
     param_grid : dict or list of dictionaries
         Dictionary with parameters names (string) as keys and lists of
         parameter settings to try as values, or a list of such
         dictionaries, in which case the grids spanned by each dictionary
         in the list are explored. This enables searching over any sequence
         of parameter settings.
-
-    scoring : string, callable or None, optional, default: None
+    
+    scoring : string, callable or None, default=None
         A string (see model evaluation documentation) or
         a scorer callable object / function with signature
         ``scorer(estimator, X, y)``.
-
+        If ``None``, the ``score`` method of the estimator is used.
+    
     fit_params : dict, optional
         Parameters to pass to the fit method.
-         
-         .. deprecated:: 0.19
-           ``fit_params`` as a constructor argument was deprecated in version
-           0.19 and will be removed in version 0.21. Pass fit parameters to
-           the ``fit`` method instead..
-
-    n_jobs : int, default 1
-        This parameter is not used and kept for compatibility.
-
+    
+    n_jobs : int, default=1
+        Number of jobs to run in parallel.
+    
     pre_dispatch : int, or string, optional
-        This parameter is not used and kept for compatibility.
-
+        Controls the number of jobs that get dispatched during parallel
+        execution. Reducing this number can be useful to avoid an
+        explosion of memory consumption when more jobs get dispatched
+        than CPUs can process. This parameter can be:
+            - None, in which case all the jobs are immediately
+              created and spawned. Use this for lightweight and
+              fast-running jobs, to avoid delays due to on-demand
+              spawning of the jobs
+            - An int, giving the exact number of total jobs that are
+              spawned
+            - A string, giving an expression as a function of n_jobs,
+              as in '2*n_jobs'
+    
     iid : boolean, default=True
         If True, the data is assumed to be identically distributed across
         the folds, and the loss minimized is the total loss per sample,
         and not the mean loss across the folds.
-
-    cv : integer or cross-validation generator, default=3
-        A cross-validation generator to use. If int, determines
-        the number of folds in StratifiedKFold if estimator is a classifier
-        and the target y is binary or multiclass, or the number
-        of folds in KFold otherwise.
-        Specific cross-validation objects can be passed, see
-        sklearn.cross_validation module for the list of possible objects.
-
+    
+    cv : int, cross-validation generator or an iterable, optional
+        Determines the cross-validation splitting strategy.
+        Possible inputs for cv are:
+          - None, to use the default 3-fold cross validation,
+          - integer, to specify the number of folds in a `(Stratified)KFold`,
+          - An object to be used as a cross-validation generator.
+          - An iterable yielding train, test splits.
+        For integer/None inputs, if the estimator is a classifier and ``y`` is
+        either binary or multiclass, :class:`StratifiedKFold` is used. In all
+        other cases, :class:`KFold` is used.
+        Refer :ref:`User Guide <cross_validation>` for the various
+        cross-validation strategies that can be used here.
+    
     refit : boolean, default=True
         Refit the best estimator with the entire dataset.
         If "False", it is impossible to make predictions using
         this GridSearchCV instance after fitting.
-
-        The refitting step, if any, happens on the local machine.
-
+    
     verbose : integer
         Controls the verbosity: the higher, the more messages.
-
+    
     error_score : 'raise' (default) or numeric
         Value to assign to the score if an error occurs in estimator fitting.
         If set to 'raise', the error is raised. If a numeric value is given,
         FitFailedWarning is raised. This parameter does not affect the refit
         step, which will always raise the error.
-
-
+    
+    return_train_score : boolean, default=True
+        If ``'False'``, the ``cv_results_`` attribute will not include training
+        scores.
+    
     Examples
     --------
     >>> from sklearn import svm, datasets
-    >>> from spark_sklearn import GridSearchCV
-    >>> from pyspark.sql import SparkSession
-    >>> from spark_sklearn.util import createLocalSparkSession
-    >>> spark = createLocalSparkSession()
+    >>> from sklearn.model_selection import GridSearchCV
     >>> iris = datasets.load_iris()
     >>> parameters = {'kernel':('linear', 'rbf'), 'C':[1, 10]}
     >>> svr = svm.SVC()
-    >>> clf = GridSearchCV(spark.sparkContext, svr, parameters)
+    >>> clf = GridSearchCV(svr, parameters)
     >>> clf.fit(iris.data, iris.target)
     ...                             # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
     GridSearchCV(cv=None, error_score=...,
@@ -115,10 +129,17 @@ class GridSearchCV(BaseSearchCV):
                          random_state=None, shrinking=True, tol=...,
                          verbose=False),
            fit_params={}, iid=..., n_jobs=1,
-           param_grid=..., pre_dispatch=..., refit=...,
+           param_grid=..., pre_dispatch=..., refit=..., return_train_score=...,
            scoring=..., verbose=...)
-    >>> spark.stop(); SparkSession._instantiatedContext = None
-
+    >>> sorted(clf.cv_results_.keys())
+    ...                             # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    ['mean_fit_time', 'mean_score_time', 'mean_test_score',...
+     'mean_train_score', 'param_C', 'param_kernel', 'params',...
+     'rank_test_score', 'split0_test_score',...
+     'split0_train_score', 'split1_test_score', 'split1_train_score',...
+     'split2_test_score', 'split2_train_score',...
+     'std_fit_time', 'std_score_time', 'std_test_score', 'std_train_score'...]
+    
     Attributes
     ----------
     cv_results_ : dict of numpy (masked) ndarrays
@@ -188,28 +209,34 @@ class GridSearchCV(BaseSearchCV):
     
     n_splits_ : int
         The number of cross-validation splits (folds/iterations).
-
+    
     Notes
     ------
     The parameters selected are those that maximize the score of the left out
     data, unless an explicit score is passed in which case it is used instead.
-
-    The parameters n_jobs and pre_dispatch are accepted but not used.
-
+    If `n_jobs` was set to a value higher than one, the data is copied for each
+    point in the grid (and not `n_jobs` times). This is done for efficiency
+    reasons if individual jobs take very little time, but may raise errors if
+    the dataset is large and not enough memory is available.  A workaround in
+    this case is to set `pre_dispatch`. Then, the memory is copied only
+    `pre_dispatch` many times. A reasonable value for `pre_dispatch` is `2 *
+    n_jobs`.
+    
     See Also
     ---------
     :class:`ParameterGrid`:
-        generates all the combinations of a an hyperparameter grid.
-
-    :func:`sklearn.cross_validation.train_test_split`:
+        generates all the combinations of a hyperparameter grid.
+    
+    :func:`sklearn.model_selection.train_test_split`:
         utility function to split the data into a development set usable
         for fitting a GridSearchCV instance and an evaluation set for
         its final evaluation.
-
+    
     :func:`sklearn.metrics.make_scorer`:
         Make a scorer from a performance metric or loss function.
-
+    
     """
+
 
     def __init__(self, sc, estimator, param_grid, scoring=None, fit_params=None,
                  n_jobs=1, iid=True, refit=True, cv=None, verbose=0,
@@ -222,38 +249,28 @@ class GridSearchCV(BaseSearchCV):
 
         self.cv_results_ = None
         _check_param_grid(param_grid)
-
-    def fit_old(self, X, y=None):
+    
+    def fit(self, X, y=None, groups=None):
         """Run fit with all sets of parameters.
-
+        
         Parameters
         ----------
-
+        
         X : array-like, shape = [n_samples, n_features]
             Training vector, where n_samples is the number of samples and
             n_features is the number of features.
-
+        
         y : array-like, shape = [n_samples] or [n_samples, n_output], optional
             Target relative to X for classification or regression;
             None for unsupervised learning.
-
+        
+        groups : array-like, with shape (n_samples,), optional
+            Group labels for the samples used while splitting the dataset into
+            train/test set.
         """
-        return self._fit(X, y, ParameterGrid(self.param_grid))
+        return self._fit(X, y, groups, ParameterGrid(self.param_grid))
 
-    
-    def fit(self, X, y=None, groups=None, **fit_params):
-
-      if self.fit_params is not None:
-        warnings.warn('"fit_params" as a constructor argument was '
-                      'deprecated in version 0.19 and will be removed '
-                      'in version 0.21. Pass fit parameters to the '
-                      '"fit" method instead.', DeprecationWarning)
-        if fit_params:
-            warnings.warn('Ignoring fit_params passed as a constructor '
-                          'argument in favor of keyword arguments to '
-                          'the "fit" method.', RuntimeWarning)
-        else:
-            fit_params = self.fit_params
+    def _fit(self, X, y, groups, parameter_iterable):
 
         estimator = self.estimator
         cv = check_cv(self.cv, y, classifier=is_classifier(estimator))
@@ -262,18 +279,16 @@ class GridSearchCV(BaseSearchCV):
 
         X, y, groups = indexable(X, y, groups)
         n_splits = cv.get_n_splits(X, y, groups)
-        # Regenerate parameter iterable for each fit
-        candidate_params = ParameterGrid(self.param_grid)
-        n_candidates = len(candidate_params)
+        
         if self.verbose > 0:
+            n_candidates = len(parameter_iterable)
             print("Fitting {0} folds for each of {1} candidates, totalling"
                   " {2} fits".format(n_splits, n_candidates,
                                      n_candidates * n_splits))
 
         base_estimator = clone(self.estimator)
 
-        param_grid = [(parameters, train, test) for parameters, (train, test) in product(candidate_params, cv.split(X, y, groups))]
-
+        param_grid = [(parameters, train, test) for parameters in parameter_iterable for train, test in list(cv.split(X, y, groups))]
         # Because the original python code expects a certain order for the elements, we need to
         # respect it.
         indexed_param_grid = list(zip(range(len(param_grid)), param_grid))
@@ -284,6 +299,7 @@ class GridSearchCV(BaseSearchCV):
         scorer = self.scorer_
         verbose = self.verbose
         error_score = self.error_score
+        fit_params = self.fit_params
         return_train_score = self.return_train_score
         fas = _fit_and_score
 
@@ -296,17 +312,20 @@ class GridSearchCV(BaseSearchCV):
                                   parameters, fit_params,
                                   return_train_score=return_train_score,
                                   return_n_test_samples=True, return_times=True,
-                                  return_parameters=False, error_score=error_score)
+                                  return_parameters=True, error_score=error_score)
             return (index, res)
         indexed_out0 = dict(par_param_grid.map(fun).collect())
         out = [indexed_out0[idx] for idx in range(len(param_grid))]
         if return_train_score:
             (train_scores, test_scores, test_sample_counts, fit_time,
-             score_time) = zip(*out)
+             score_time, parameters) = zip(*out)
         else:
-            (test_scores, test_sample_counts, fit_time, score_time) = zip(*out)
+            (test_scores, test_sample_counts, fit_time, score_time, parameters) = zip(*out)
         X_bc.unpersist()
         y_bc.unpersist()
+
+        candidate_params = parameters[::n_splits]
+        n_candidates = len(candidate_params)
 
         results = dict()
 
