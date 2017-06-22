@@ -45,7 +45,9 @@ def _add_to_module():
     sklearn.grid_search.GridSearchCV = SPGridSearchWrapper
     sklearn.grid_search.GridSearchCV_original = SKGridSearchCV
     from sklearn.tests import test_grid_search
-    all_methods = [(mname, method) for (mname, method) in test_grid_search.__dict__.items()
+    from sklearn.model_selection.tests import test_search
+    allTests = test_grid_search.__dict__.items() + test_search.__dict__.items()
+    all_methods = [(mname, method) for (mname, method) in allTests
                    if mname.startswith("test_") and mname not in _blacklist]
 
     for name, method in all_methods:
