@@ -5,7 +5,7 @@ Class for parallelizing GridSearchCV jobs in scikit-learn
 import sys
 
 from itertools import product
-from collections import defaultdict
+from collections import defaultdict, Sized
 from functools import partial
 import warnings
 
@@ -242,8 +242,9 @@ class GridSearchCV(BaseSearchCV):
                  n_jobs=1, iid=True, refit=True, cv=None, verbose=0,
                  pre_dispatch='2*n_jobs', error_score='raise', return_train_score=True):
         super(GridSearchCV, self).__init__(
-            estimator, scoring, fit_params, n_jobs, iid,
-            refit, cv, verbose, pre_dispatch, error_score, return_train_score)
+            estimator=estimator, scoring=scoring, fit_params=fit_params, n_jobs=n_jobs, iid=iid,
+            refit=retfit, cv=cv, verbose=verbose, pre_dispatch=pre_dispatch, error_score=error_score,
+            return_train_score=return_train_score)
         self.sc = sc
         self.param_grid = param_grid
 
@@ -280,7 +281,7 @@ class GridSearchCV(BaseSearchCV):
         X, y, groups = indexable(X, y, groups)
         n_splits = cv.get_n_splits(X, y, groups)
         
-        if self.verbose > 0:
+        if self.verbose > 0 and isinstance(parameter_iterable, Sized):
             n_candidates = len(parameter_iterable)
             print("Fitting {0} folds for each of {1} candidates, totalling"
                   " {2} fits".format(n_splits, n_candidates,
@@ -288,7 +289,8 @@ class GridSearchCV(BaseSearchCV):
 
         base_estimator = clone(self.estimator)
 
-        param_grid = [(parameters, train, test) for parameters in parameter_iterable for train, test in list(cv.split(X, y, groups))]
+        param_grid = [(parameters, train, test) for parameters in parameter_iterable
+                                                for train, test in list(cv.split(X, y, groups))]
         # Because the original python code expects a certain order for the elements, we need to
         # respect it.
         indexed_param_grid = list(zip(range(len(param_grid)), param_grid))
@@ -309,10 +311,10 @@ class GridSearchCV(BaseSearchCV):
             local_X = X_bc.value
             local_y = y_bc.value
             res = fas(local_estimator, local_X, local_y, scorer, train, test, verbose,
-                                  parameters, fit_params,
-                                  return_train_score=return_train_score,
-                                  return_n_test_samples=True, return_times=True,
-                                  return_parameters=True, error_score=error_score)
+                      parameters, fit_params,
+                      return_train_score=return_train_score,
+                      return_n_test_samples=True, return_times=True,
+                      return_parameters=True, error_score=error_score)
             return (index, res)
         indexed_out0 = dict(par_param_grid.map(fun).collect())
         out = [indexed_out0[idx] for idx in range(len(param_grid))]
