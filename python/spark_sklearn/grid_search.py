@@ -243,7 +243,7 @@ class GridSearchCV(BaseSearchCV):
                  pre_dispatch='2*n_jobs', error_score='raise', return_train_score=True):
         super(GridSearchCV, self).__init__(
             estimator=estimator, scoring=scoring, fit_params=fit_params, n_jobs=n_jobs, iid=iid,
-            refit=retfit, cv=cv, verbose=verbose, pre_dispatch=pre_dispatch, error_score=error_score,
+            refit=refit, cv=cv, verbose=verbose, pre_dispatch=pre_dispatch, error_score=error_score,
             return_train_score=return_train_score)
         self.sc = sc
         self.param_grid = param_grid
