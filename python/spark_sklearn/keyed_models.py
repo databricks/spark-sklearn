@@ -320,7 +320,7 @@ class KeyedEstimator(pyspark.ml.Estimator):
         self._setDefault(**{paramName: paramSpec["default"]
                             for paramName, paramSpec in KeyedEstimator._paramSpecs.items()
                             if "default" in paramSpec})
-        kwargs = KeyedEstimator._inferredParams(sklearnEstimator, self.__init__._input_kwargs)
+        kwargs = KeyedEstimator._inferredParams(sklearnEstimator, self._input_kwargs)
         self._set(**kwargs)
 
         self._verifyEstimatorType()
@@ -489,7 +489,7 @@ class KeyedModel(pyspark.ml.Model):
         if yCol and type(outputType) not in KeyedModel._sql_types:
             raise TypeError("Output type {} is not an AtomicType (expected for {} estimator)"
                             .format(outputType, estimatorType))
-        self._set(**self.__init__._input_kwargs)
+        self._set(**self._input_kwargs)
 
     def _verifyEstimatorType(self):
         estimatorType = self.getOrDefault("estimatorType")
