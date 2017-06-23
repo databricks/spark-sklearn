@@ -26,14 +26,6 @@ class SPGridSearchWrapper(GridSearchCV):
                                                 scoring, fit_params, n_jobs, iid, refit, cv,
                                                 verbose, pre_dispatch, error_score)
 
-    # These methods do not raise ValueError but something different
-_blacklist = set(['test_pickle',
-                  'test_grid_search_precomputed_kernel_error_nonsquare',
-                  'test_grid_search_precomputed_kernel_error_kernel_function',
-                  'test_grid_search_precomputed_kernel',
-                  'test_grid_search_failing_classifier_raise',
-                  'test_grid_search_failing_classifier']) # This one we should investigate
-
 def _create_method(method):
     def do_test_expected(*kwargs):
         method()
@@ -43,9 +35,9 @@ def _add_to_module():
     SKGridSearchCV = sklearn.grid_search.GridSearchCV
     sklearn.grid_search.GridSearchCV = SPGridSearchWrapper
     sklearn.grid_search.GridSearchCV_original = SKGridSearchCV
-    from sklearn.tests import test_grid_search
-    all_methods = [(mname, method) for (mname, method) in test_grid_search.__dict__.items()
-                   if mname.startswith("test_") and mname not in _blacklist]
+    from sklearn.model_selection.tests import test_search
+    all_methods = [(mname, method) for (mname, method) in test_search.__dict__.items()
+                   if mname.startswith("test_")]
 
     for name, method in all_methods:
         method_for_test = _create_method(method)
