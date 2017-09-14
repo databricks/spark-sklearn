@@ -19,7 +19,7 @@ CLASSIFIERS = [
     "Programming Language :: Python",
     "Topic :: Scientific/Engineering",
 ]
-INSTALL_REQUIRES = ["scikit-learn == 0.18.1"]
+INSTALL_REQUIRES = ["scikit-learn >= 0.18.1"]
 
 # Project root
 ROOT = os.path.abspath(os.getcwd() + "/")
