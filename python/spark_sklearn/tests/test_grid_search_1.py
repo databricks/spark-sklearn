@@ -32,6 +32,10 @@ def _create_method(method):
     return do_test_expected
         
 def _add_to_module():
+    # NOTE: This doesn't actually run scikit-learn tests against SPGridSearchWrapper
+    # for scikit-learn >= 0.18, since the scikit-learn tests (in sklearn.model_selection.tests) use
+    # sklearn.model_selection.GridSearchCV (not sklearn.grid_search.GridSearchCV)
+    # TODO: Get scikit-learn tests to pass with spark-sklearn GridSearch implementation
     SKGridSearchCV = sklearn.grid_search.GridSearchCV
     sklearn.grid_search.GridSearchCV = SPGridSearchWrapper
     sklearn.grid_search.GridSearchCV_original = SKGridSearchCV
