@@ -2,9 +2,6 @@
 Class for parallelizing GridSearchCV jobs in scikit-learn
 """
 
-import sys
-
-from itertools import product
 from collections import defaultdict, Sized
 from functools import partial
 import warnings
@@ -115,21 +112,23 @@ class GridSearchCV(BaseSearchCV):
     Examples
     --------
     >>> from sklearn import svm, datasets
-    >>> from sklearn.model_selection import GridSearchCV
+    >>> from spark_sklearn.grid_search import GridSearchCV
+    >>> from spark_sklearn.util import createLocalSparkSession
+    >>> sc = createLocalSparkSession().sparkContext
     >>> iris = datasets.load_iris()
     >>> parameters = {'kernel':('linear', 'rbf'), 'C':[1, 10]}
     >>> svr = svm.SVC()
-    >>> clf = GridSearchCV(svr, parameters)
+    >>> clf = GridSearchCV(sc, svr, parameters)
     >>> clf.fit(iris.data, iris.target)
     ...                             # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
     GridSearchCV(cv=None, error_score=...,
            estimator=SVC(C=1.0, cache_size=..., class_weight=..., coef0=...,
-                         decision_function_shape=None, degree=..., gamma=...,
+                         decision_function_shape=..., degree=..., gamma=...,
                          kernel='rbf', max_iter=-1, probability=False,
                          random_state=None, shrinking=True, tol=...,
                          verbose=False),
            fit_params={}, iid=..., n_jobs=1,
-           param_grid=..., pre_dispatch=..., refit=..., return_train_score=...,
+           param_grid=..., pre_dispatch=..., refit=...,
            scoring=..., verbose=...)
     >>> sorted(clf.cv_results_.keys())
     ...                             # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
@@ -242,9 +241,12 @@ class GridSearchCV(BaseSearchCV):
                  n_jobs=1, iid=True, refit=True, cv=None, verbose=0,
                  pre_dispatch='2*n_jobs', error_score='raise', return_train_score=True):
         super(GridSearchCV, self).__init__(
-            estimator=estimator, scoring=scoring, fit_params=fit_params, n_jobs=n_jobs, iid=iid,
+            estimator=estimator, scoring=scoring, n_jobs=n_jobs, iid=iid,
             refit=refit, cv=cv, verbose=verbose, pre_dispatch=pre_dispatch, error_score=error_score,
             return_train_score=return_train_score)
+
+        self.fit_params = fit_params if fit_params is not None else {}
+
         self.sc = sc
         self.param_grid = param_grid
 
