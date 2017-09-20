@@ -21,7 +21,7 @@ This package is released under the Apache 2.0 license. See the LICENSE file.
 
 This package has the following requirements:
 This package has the following requirements:
- - Sklearn version >= 0.18.1
+ - Sklearn version >= 0.18.1, <= 0.19
  - Spark >= 2.1.1 Spark may be downloaded from the
  [Spark official website](http://spark.apache.org/). In order to use spark-sklearn, you need to use the pyspark interpreter or another Spark-compliant python interpreter. See the [Spark guide](https://spark.apache.org/docs/latest/programming-guide.html#overview) for more details.
  - [nose](https://nose.readthedocs.org) (testing dependency only)
@@ -68,7 +68,7 @@ More extensive documentation (generated with Sphinx) is available in the `python
 - 2016-08-16 Minor release (0.2.0):
    1. the official Spark target is Spark 2.0
    2. support for keyed models
-- 2017-09-14 Minor release (0.2.2):
+- 2017-09-20 Minor release (0.2.2):
    1. The official Spark target is Spark >= 2.1
 
 
