@@ -19,7 +19,7 @@ CLASSIFIERS = [
     "Programming Language :: Python",
     "Topic :: Scientific/Engineering",
 ]
-INSTALL_REQUIRES = ["scikit-learn >=0.18.1, <= 0.19"]
+INSTALL_REQUIRES = ["scikit-learn >=0.18.1, <=0.19"]
 
 # Project root
 ROOT = os.path.abspath(os.getcwd() + "/")
@@ -38,7 +38,7 @@ setup(
 	description="Integration tools for running scikit-learn on Spark",
 	license="Apache 2.0",
 	url="https://github.com/databricks/spark-sklearn",
-	version="0.2.0",
+	version="0.2.2",
 	author="Joseph Bradley",
 	author_email="joseph@databricks.com",
 	maintainer="Tim Hunter",
