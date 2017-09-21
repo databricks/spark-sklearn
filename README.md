@@ -26,7 +26,7 @@ This package is available on PYPI:
 This project is also available as as [Spark package](http://spark-packages.org/package/databricks/spark-sklearn).
 
 The developer version has the following requirements:
- - a recent release of scikit-learn. Release 0.17 has been tested, older versions may work too.
+ - a recent release of scikit-learn. Releases 0.18.1, 0.19.0 have been tested, older versions may work too.
  - Spark >= 2.1.1. Spark may be downloaded from the [Spark official website](http://spark.apache.org/). In order to use this package, you need to use the pyspark interpreter or another Spark-compliant python interpreter. See the [Spark guide](https://spark.apache.org/docs/latest/programming-guide.html#overview) for more details.
  - [nose](https://nose.readthedocs.org) (testing dependency only)
  - Pandas, if using the Pandas integration or testing. Pandas==0.18 has been tested.
@@ -64,12 +64,8 @@ More extensive documentation (generated with Sphinx) is available in the `python
 ## Changelog
 
 - 2015-12-10 First public release (0.1)
-
-- 2016-01-10 Package fix release (0.1.1)
-
-- 0.1.2:
-  - python 3 support
-
-- 2016-08-16 Minor release:
-   1. the official Spark target is Spark 0.2
+- 2016-08-16 Minor release (0.2.0):
+   1. the official Spark target is Spark 2.0
    2. support for keyed models
+- 2017-09-20 Minor release (0.2.2):
+   1. The official Spark target is Spark >= 2.1
