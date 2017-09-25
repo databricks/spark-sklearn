@@ -15,4 +15,4 @@ done
 
 export PYTHONPATH=$PYTHONPATH:$SPARK_HOME/python$LIBS:$DIR
 
-sphinx-build -E -a -j4 $DIR/doc/ $DIR/doc_gen/
+sphinx-build -E -a -j4 $DIR/doc/ $DIR/../docs/
