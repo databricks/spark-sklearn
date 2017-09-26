@@ -29,8 +29,11 @@ Install the python dependencies necessary for building the docs via:
 
     $ pip install -r requirements-docs.txt
 
-Execute `jekyll build` from the `docs/` directory to compile the site. Compiling the site with Jekyll will create a directory
-called `_site` containing index.html as well as the rest of the compiled files. To serve the docs
+Execute `jekyll build` from the `docs/` directory to compile the site.
+When you run `jekyll build` in the `docs` directory, it will build (using Sphinx) the Python API
+docs, copying them into the `docs` directory (and then also into the `_site` directory).
+
+To serve the docs
 locally, run:
 
     # Serve content locally on port 4000
@@ -39,22 +42,3 @@ locally, run:
 Note that `SPARK_HOME` must be set to your local Spark installation in order to generate the docs.
 To manually point to a specific `Spark` installation,
     $ SPARK_HOME=<your-path-to-spark-home> PRODUCTION=1 jekyll build
-
-## Pygments
-
-We also use pygments (http://pygments.org) for syntax highlighting in documentation markdown pages.
-
-To mark a block of code in your markdown to be syntax highlighted by jekyll during the compile
-phase, use the following sytax:
-
-    {% highlight python %}
-    // Your python code goes here, you can replace python with many other
-    // supported languages too.
-    {% endhighlight %}
-
-## API Docs (Sphinx)
-
-You can build the Python API docs by running `python/gen-doc.sh` from the root project directory.
-
-When you run `jekyll build` in the `docs` directory, it will copy over the Python docs
-into the `docs` directory (and then also into the `_site` directory).

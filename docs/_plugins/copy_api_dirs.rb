@@ -29,7 +29,7 @@ cd("../python")
 if not (ENV['SPARK_HOME'])
   raise("Python API docs cannot be generated if SPARK_HOME is not set.")
 end
-# system({"PACKAGE_VERSION"=>version}, "make clean") || raise("Python doc clean failed")
+
 system({"PACKAGE_VERSION"=>version}, "./gen-doc.sh") || raise("Python doc generation failed")
 
 puts "Moving back into home dir."
