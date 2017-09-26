@@ -36,11 +36,9 @@ if not (ENV['SKIP_API'] == '1')
     puts "Moving back into home dir."
     cd("../")
 
-    puts "Making directory api/python"
-    mkdir_p "docs/api/python"
-
-    puts "cp -r python/doc_gen/. docs/api/python"
-    cp_r("python/doc_gen/.", "docs/api/python")
+    puts "Copying Python docs into root documentation folder (docs/)"
+    puts "cp -r python/doc_gen/. docs/"
+    cp_r("python/doc_gen/.", "docs/")
 
     puts "rm -r python/doc_gen"
     rm_r("python/doc_gen/")
