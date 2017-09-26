@@ -3,7 +3,7 @@
 set -e
 
 if [ -z "$SPARK_HOME" ]; then
-    echo 'You need to set $SPARK_HOME to run these tests.' >&2
+    echo 'You need to set $SPARK_HOME to generate API docs.' >&2
     exit 1
 fi
 
@@ -17,8 +17,6 @@ done
 
 export PYTHONPATH=$PYTHONPATH:$SPARK_HOME/python$LIBS:$DIR
 
-OUTPUT_DIR="$DIR/../docs/"
+OUTPUT_DIR="$DIR/doc_gen"
 
 sphinx-build -E -a -j4 $DIR/doc/ $OUTPUT_DIR
-
-echo $OUTPUT_DIR
