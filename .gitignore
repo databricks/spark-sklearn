@@ -15,5 +15,9 @@ src_managed/
 project/boot/
 project/plugins/project/
 
+# sphinx
+python/doc_gen/.doctrees/
+python/doc_gen/.buildinfo
+
 # editor backups
 *~
