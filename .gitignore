@@ -15,8 +15,5 @@ src_managed/
 project/boot/
 project/plugins/project/
 
-# sphinx
-python/doc_gen
-
 # editor backups
 *~
