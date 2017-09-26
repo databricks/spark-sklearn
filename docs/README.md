@@ -3,19 +3,12 @@ Welcome to the spark-sklearn Spark Package documentation!
 This readme will walk you through navigating and building the spark-sklearn documentation, which is
 included here with the source code.
 
-Read on to learn more about viewing documentation in plain text (i.e., markdown) or building the
-documentation yourself.
-
 ## Generating the Documentation HTML
 
-In this directory you will find textfiles formatted using Markdown, with an ".md" suffix. You can
-read those text files directly if you want. Start with index.md.
+### Installing Dependencies
 
-The markdown code can be compiled to HTML using the [Jekyll tool](http://jekyllrb.com).
-`Jekyll` and a few dependencies must be installed for this to work. We recommend
-installing via the Ruby Gem dependency manager. Since the exact HTML output
-varies between versions of Jekyll and its dependencies, we list specific versions here
-in some cases:
+The spark-sklearn documentation is built with [Jekyll](http://jekyllrb.com), which
+can be installed as follows:
 
     $ sudo gem install jekyll
     $ sudo gem install jekyll-redirect-from
@@ -30,6 +23,8 @@ Otherwise the build script might fail to resolve dependencies.
 Install the python dependencies necessary for building the docs via (from project root):
 
     $ pip install -r python/requirements-docs.txt
+
+### Building the Docs
 
 Execute `jekyll build` from the `docs/` directory to compile the site.
 When you run `jekyll build`, it will build (using Sphinx) the Python API
