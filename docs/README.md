@@ -4,8 +4,7 @@ This readme will walk you through navigating and building the spark-sklearn docu
 included here with the source code.
 
 Read on to learn more about viewing documentation in plain text (i.e., markdown) or building the
-documentation yourself. Why build it yourself? So that you have the docs that correspond to
-whichever version of spark-sklearn you currently have checked out of revision control.
+documentation yourself.
 
 ## Generating the Documentation HTML
 
@@ -31,16 +30,11 @@ Install the python dependencies necessary for building the docs via:
     $ pip install -r requirements-docs.txt
 
 Execute `jekyll build` from the `docs/` directory to compile the site. Compiling the site with Jekyll will create a directory
-called `_site` containing index.html as well as the rest of the compiled files.
+called `_site` containing index.html as well as the rest of the compiled files. To serve the docs
+locally, run:
 
-You can modify the default Jekyll build as follows:
-
-    # Skip generating API docs (which takes a while)
-    $ SKIP_API=1 jekyll build
     # Serve content locally on port 4000
     $ jekyll serve --watch
-    # Build the site with extra features used on the live page
-    $ PRODUCTION=1 jekyll build
 
 Note that `SPARK_HOME` must be set to your local Spark installation in order to generate the docs.
 To manually point to a specific `Spark` installation,
@@ -48,8 +42,7 @@ To manually point to a specific `Spark` installation,
 
 ## Pygments
 
-We also use pygments (http://pygments.org) for syntax highlighting in documentation markdown pages,
-so you will also need to install that (it requires Python) by running `sudo pip install Pygments`.
+We also use pygments (http://pygments.org) for syntax highlighting in documentation markdown pages.
 
 To mark a block of code in your markdown to be syntax highlighted by jekyll during the compile
 phase, use the following sytax:
@@ -63,7 +56,5 @@ phase, use the following sytax:
 
 You can build the Python API docs by running `python/gen-doc.sh` from the root project directory.
 
-When you run `jekyll` in the `docs` directory, it will also copy over the Python docs for the various
-subprojects into the `docs` directory (and then also into the `_site` directory).
-
-NOTE: To skip the step of building and copying over the API docs, run `SKIP_API=1
+When you run `jekyll build` in the `docs` directory, it will copy over the Python docs
+into the `docs` directory (and then also into the `_site` directory).
