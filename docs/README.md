@@ -20,7 +20,9 @@ in some cases:
     $ sudo gem install jekyll
     $ sudo gem install jekyll-redirect-from
 
-On macOS, with the default Ruby, please install Jekyll with Bundler as [instructed on offical website](https://jekyllrb.com/docs/quickstart/). Otherwise the build script might fail to resolve dependencies.
+On macOS, with the default Ruby, please install Jekyll with Bundler as
+[instructed on offical website](https://jekyllrb.com/docs/quickstart/).
+Otherwise the build script might fail to resolve dependencies.
 
     $ sudo gem install jekyll bundler
     $ sudo gem install jekyll-redirect-from
@@ -30,11 +32,10 @@ Install the python dependencies necessary for building the docs via (from projec
     $ pip install -r python/requirements-docs.txt
 
 Execute `jekyll build` from the `docs/` directory to compile the site.
-When you run `jekyll build` in the `docs` directory, it will build (using Sphinx) the Python API
+When you run `jekyll build`, it will build (using Sphinx) the Python API
 docs, copying them into the `docs` directory (and then also into the `_site` directory).
 
-To serve the docs
-locally, run:
+To serve the docs locally, run:
 
     # Serve content locally on port 4000
     $ jekyll serve --watch
