@@ -26,6 +26,10 @@ On macOS, with the default Ruby, please install Jekyll with Bundler as [instruct
     $ sudo gem install jekyll bundler
     $ sudo gem install jekyll-redirect-from
 
+Install the python dependencies necessary for building the docs via:
+
+    $ pip install -r requirements-docs.txt
+
 Execute `jekyll build` from the `docs/` directory to compile the site. Compiling the site with Jekyll will create a directory
 called `_site` containing index.html as well as the rest of the compiled files.
 
@@ -54,11 +58,6 @@ phase, use the following sytax:
     // Your python code goes here, you can replace python with many other
     // supported languages too.
     {% endhighlight %}
-
-## Sphinx
-
-We use Sphinx to generate Python API docs, so you will need to install it by running
-`sudo pip install sphinx`.
 
 ## API Docs (Sphinx)
 

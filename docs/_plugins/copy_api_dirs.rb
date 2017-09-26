@@ -41,7 +41,7 @@ if not (ENV['SKIP_API'] == '1')
 
     puts "cp -r python/doc_gen/. docs/api/python"
     cp_r("python/doc_gen/.", "docs/api/python")
-    
+
     puts "rm -r python/doc_gen"
     rm_r("python/doc_gen/")
 end
