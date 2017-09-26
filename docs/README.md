@@ -25,9 +25,9 @@ On macOS, with the default Ruby, please install Jekyll with Bundler as [instruct
     $ sudo gem install jekyll bundler
     $ sudo gem install jekyll-redirect-from
 
-Install the python dependencies necessary for building the docs via:
+Install the python dependencies necessary for building the docs via (from project root):
 
-    $ pip install -r requirements-docs.txt
+    $ pip install -r python/requirements-docs.txt
 
 Execute `jekyll build` from the `docs/` directory to compile the site.
 When you run `jekyll build` in the `docs` directory, it will build (using Sphinx) the Python API
