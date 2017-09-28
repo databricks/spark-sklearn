@@ -16,8 +16,7 @@ project/boot/
 project/plugins/project/
 
 # sphinx
-python/doc_gen/.doctrees/
-python/doc_gen/.buildinfo
+python/doc_gen/
 
 # editor backups
 *~
