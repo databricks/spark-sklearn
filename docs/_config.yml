@@ -1,0 +1,6 @@
+include:
+  - _static
+  - _modules
+
+# Specifies the current spark-sklearn version for the build
+SPARK_SKLEARN_VERSION: 0.2.2

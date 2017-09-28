@@ -1,0 +1,5 @@
+# This file should list any python package dependencies for building API docs.
+-r requirements.txt
+scipy>=0.19
+sphinx
+pygments
