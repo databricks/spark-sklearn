@@ -15,6 +15,20 @@ src_managed/
 project/boot/
 project/plugins/project/
 
+# generated API doc files
+docs/.buildinfo
+docs/.doctrees/
+docs/_site/
+docs/_sources/
+docs/_static/
+docs/genindex.html
+docs/index.html
+docs/objects.inv
+docs/py-modindex.html
+docs/search.html
+docs/searchindex.js
+
+
 # sphinx
 python/doc_gen/
 
