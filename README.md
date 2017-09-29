@@ -59,7 +59,8 @@ This classifier can be used as a drop-in replacement for any scikit-learn classi
 
 ## Documentation
 
-More extensive documentation (generated with Sphinx) is available in the `python/doc_gen/index.html` file.
+[API documentation](http://databricks.github.io/spark-sklearn-docs) is currently hosted on Github pages. To
+build the docs yourself, see the instructions in [docs/README.md](https://github.com/databricks/spark-sklearn/tree/master/docs).
 
 ## Changelog
 
