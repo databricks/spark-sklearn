@@ -8,7 +8,7 @@ sparkVersion := "2.1.1"
 spName := "databricks/spark-sklearn"
 
 // Don't forget to set the version
-version := "0.2.2"
+version := "0.2.3"
 
 // All Spark Packages need a license
 licenses := Seq("Apache-2.0" -> url("http://opensource.org/licenses/Apache-2.0"))
