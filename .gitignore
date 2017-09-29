@@ -30,7 +30,7 @@ docs/searchindex.js
 
 
 # sphinx
-python/doc_gen
+python/doc_gen/
 
 # editor backups
 *~
