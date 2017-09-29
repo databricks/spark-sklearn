@@ -70,3 +70,5 @@ build the docs yourself, see the instructions in [docs/README.md](https://github
    2. support for keyed models
 - 2017-09-20 Minor release (0.2.2):
    1. The official Spark target is Spark >= 2.1
+- 2017-09-29 Minor release (0.2.3):
+   1. Fixes spark-package build of spark-sklearn.
