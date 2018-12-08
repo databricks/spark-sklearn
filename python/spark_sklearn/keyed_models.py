@@ -38,7 +38,8 @@ and aggregated dataframe.
 <BLANKLINE>
 >>> km = KeyedEstimator(sklearnEstimator=LinearRegression(), yCol="y").fit(df)
 >>> def printFloat(x):
-...     return "{:.2f}".format(round(x, 2))
+...     rounded = round(x, 2)
+...     return "{:.2f}".format(0 if rounded == 0 else rounded)
 ...
 >>> def printModel(model):
 ...     coef = "[" + ", ".join(map(printFloat, model.coef_)) + "]"
