@@ -369,7 +369,6 @@ class GridSearchCV(BaseSearchCV):
 
         best_index = np.flatnonzero(results["rank_test_score"] == 1)[0]
         best_parameters = candidate_params[best_index]
-        self.best_params_ = best_parameters
 
         # Use one MaskedArray and mask all the places where the param is not
         # applicable for that candidate. Use defaultdict as each candidate may
