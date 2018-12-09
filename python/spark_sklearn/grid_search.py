@@ -31,8 +31,7 @@ class GridSearchCV(BaseSearchCV):
     
     The parameters of the estimator used to apply these methods are optimized
     by cross-validated grid-search over a parameter grid.
-    Read more in the :ref:`User Guide <grid_search>`.
-    
+
     Parameters
     ----------
     estimator : estimator object.
@@ -64,15 +63,16 @@ class GridSearchCV(BaseSearchCV):
         execution. Reducing this number can be useful to avoid an
         explosion of memory consumption when more jobs get dispatched
         than CPUs can process. This parameter can be:
-            - None, in which case all the jobs are immediately
-              created and spawned. Use this for lightweight and
-              fast-running jobs, to avoid delays due to on-demand
-              spawning of the jobs
-            - An int, giving the exact number of total jobs that are
-              spawned
-            - A string, giving an expression as a function of n_jobs,
-              as in '2*n_jobs'
-    
+
+        - None, in which case all the jobs are immediately
+          created and spawned. Use this for lightweight and
+          fast-running jobs, to avoid delays due to on-demand
+          spawning of the jobs
+        - An int, giving the exact number of total jobs that are
+          spawned
+        - A string, giving an expression as a function of n_jobs,
+          as in '2*n_jobs'
+
     iid : boolean, default=True
         If True, the data is assumed to be identically distributed across
         the folds, and the loss minimized is the total loss per sample,
@@ -81,15 +81,15 @@ class GridSearchCV(BaseSearchCV):
     cv : int, cross-validation generator or an iterable, optional
         Determines the cross-validation splitting strategy.
         Possible inputs for cv are:
-          - None, to use the default 3-fold cross validation,
-          - integer, to specify the number of folds in a `(Stratified)KFold`,
-          - An object to be used as a cross-validation generator.
-          - An iterable yielding train, test splits.
+
+        - None, to use the default 3-fold cross validation,
+        - integer, to specify the number of folds in a `(Stratified)KFold`,
+        - An object to be used as a cross-validation generator.
+        - An iterable yielding train, test splits.
+
         For integer/None inputs, if the estimator is a classifier and ``y`` is
         either binary or multiclass, :class:`StratifiedKFold` is used. In all
         other cases, :class:`KFold` is used.
-        Refer :ref:`User Guide <cross_validation>` for the various
-        cross-validation strategies that can be used here.
     
     refit : boolean, default=True
         Refit the best estimator with the entire dataset.
@@ -145,18 +145,21 @@ class GridSearchCV(BaseSearchCV):
         A dict with keys as column headers and values as columns, that can be
         imported into a pandas ``DataFrame``.
         For instance the below given table
-            +------------+-----------+------------+-----------------+---+---------+
-            |param_kernel|param_gamma|param_degree|split0_test_score|...|rank_....|
-            +============+===========+============+=================+===+=========+
-            |  'poly'    |     --    |      2     |        0.8      |...|    2    |
-            +------------+-----------+------------+-----------------+---+---------+
-            |  'poly'    |     --    |      3     |        0.7      |...|    4    |
-            +------------+-----------+------------+-----------------+---+---------+
-            |  'rbf'     |     0.1   |     --     |        0.8      |...|    3    |
-            +------------+-----------+------------+-----------------+---+---------+
-            |  'rbf'     |     0.2   |     --     |        0.9      |...|    1    |
-            +------------+-----------+------------+-----------------+---+---------+
+
+        +------------+-----------+------------+-----------------+---+---------+
+        |param_kernel|param_gamma|param_degree|split0_test_score|...|rank.....|
+        +============+===========+============+=================+===+=========+
+        |  'poly'    |     --    |      2     |        0.8      |...|    2    |
+        +------------+-----------+------------+-----------------+---+---------+
+        |  'poly'    |     --    |      3     |        0.7      |...|    4    |
+        +------------+-----------+------------+-----------------+---+---------+
+        |  'rbf'     |     0.1   |     --     |        0.8      |...|    3    |
+        +------------+-----------+------------+-----------------+---+---------+
+        |  'rbf'     |     0.2   |     --     |        0.9      |...|    1    |
+        +------------+-----------+------------+-----------------+---+---------+
+
         will be represented by a ``cv_results_`` dict of::
+
             {
             'param_kernel': masked_array(data = ['poly', 'poly', 'rbf', 'rbf'],
                                          mask = [False False False False]...)
@@ -179,6 +182,7 @@ class GridSearchCV(BaseSearchCV):
             'std_score_time'     : [0.001, 0.002, 0.003, 0.005],
             'params'             : [{'kernel': 'poly', 'degree': 2}, ...],
             }
+
         NOTE that the key ``'params'`` is used to store a list of parameter
         settings dict for all the parameter candidates.
         The ``mean_fit_time``, ``std_fit_time``, ``mean_score_time`` and
@@ -208,7 +212,7 @@ class GridSearchCV(BaseSearchCV):
     
     n_splits_ : int
         The number of cross-validation splits (folds/iterations).
-    
+
     Notes
     ------
     The parameters selected are those that maximize the score of the left out
