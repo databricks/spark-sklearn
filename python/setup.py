@@ -44,7 +44,7 @@ setup(
 	maintainer="Tim Hunter",
 	maintainer_email="timhunter@databricks.com",
 	keywords=KEYWORDS,
-	long_description=read("README.md"),
+	long_description=read("README.rst"),
 	packages=PACKAGES,
 	classifiers=CLASSIFIERS,
 	zip_safe=False,
