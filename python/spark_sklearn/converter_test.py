@@ -45,6 +45,8 @@ class ConverterTests(MLlibTestCase):
         self.assertTrue(isinstance(skl_lr, SKL_LogisticRegression),
                         "Expected sklearn LogisticRegression but found type %s" % type(skl_lr))
         self._compare_GLMs(skl_lr, lr)
+        # Make sure this doesn't throw an error
+        skl_lr.predict_proba(self.X)
 
     def test_LinearRegression_spark2skl(self):
         lr = LinearRegression().fit(self.df)
@@ -52,6 +54,8 @@ class ConverterTests(MLlibTestCase):
         self.assertTrue(isinstance(skl_lr, SKL_LinearRegression),
                         "Expected sklearn LinearRegression but found type %s" % type(skl_lr))
         self._compare_GLMs(skl_lr, lr)
+        # Make sure this doesn't throw an error
+        skl_lr.predict(self.X)
 
     def ztest_toPandas(self):
         data = [(Vectors.dense([0.1, 0.2]),),

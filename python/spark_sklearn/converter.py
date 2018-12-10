@@ -105,14 +105,16 @@ class Converter(object):
         :return: scikit-learn model with equivalent predictive behavior.
                  Currently, parameters or arguments for training are not copied.
         """
-        if isinstance(model, LogisticRegressionModel) or isinstance(model, LinearRegressionModel):
-            return self._toSKLGLM(model)
+        if isinstance(model, LogisticRegressionModel) :
+            return self._toSKLGLM(model, True)
+        if isinstance(model, LinearRegressionModel):
+            return self._toSKLGLM(model, False)
         else:
             supported_types = map(lambda t: type(t), self._supported_spark_types)
             raise ValueError("Converter.toSKLearn cannot convert type: %s.  Supported types: %s" %
                              (type(model), ", ".join(supported_types)))
 
-    def _toSKLGLM(self, model):
+    def _toSKLGLM(self, model, is_classifier):
         """ Private method for converting a GLM to a scikit-learn model
         TODO: Add model parameters as well.
         """
@@ -122,7 +124,9 @@ class Converter(object):
         weights = model.coefficients
         skl = skl_cls()
         skl.intercept_ = np.float64(intercept)
-        skl.coef_ = weights.toArray()
+        skl.coef_ = weights.toArray().reshape(1, -1)
+        if is_classifier:
+            skl.classes_ = np.array([0, 1])
         return skl
 
     def toPandas(self, df):
