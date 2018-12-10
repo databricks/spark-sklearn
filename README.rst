@@ -30,7 +30,7 @@ This project is also available as as `Spark package <https://spark-packages.org/
 
 The developer version has the following requirements:
 
-- a recent release of scikit-learn. Releases 0.18.1, 0.19.0 have been tested, older versions may work too.
+- scikit-learn 0.18 or 0.19. Later versions may work, but tests currently are incompatible with 0.20.
 - Spark >= 2.1.1. Spark may be downloaded from the `Spark website <https://spark.apache.org/>`_.
   In order to use this package, you need to use the pyspark interpreter or another Spark-compliant python
   interpreter. See the `Spark guide <https://spark.apache.org/docs/latest/programming-guide.html#overview>`_
@@ -61,11 +61,11 @@ on how to install the package.
 
 .. code:: python
 
-    from sklearn import svm, grid_search, datasets
+    from sklearn import svm, datasets
     from spark_sklearn import GridSearchCV
     iris = datasets.load_iris()
     parameters = {'kernel':('linear', 'rbf'), 'C':[1, 10]}
-    svr = svm.SVC()
+    svr = svm.SVC(gamma='auto')
     clf = GridSearchCV(sc, svr, parameters)
     clf.fit(iris.data, iris.target)
 

@@ -249,7 +249,7 @@ class KeyedModelTests(RandomTest):
         _assertPandasAlmostEqual(actualDF, expectedDF, keyCols + ["useless"])
 
     def test_transformer(self):
-        minExamples = 1
+        minExamples = 2
         featureGen = lambda: np.random.random(KeyedModelTests.NDIM)
         labelGen = None
         self.checkKeyedModelEquivalent(minExamples, featureGen, labelGen,
@@ -277,7 +277,7 @@ class KeyedModelTests(RandomTest):
         # Need to ensure each user has at least one of each label to train on.
         cyc = cycle([-1, 1])
         labelGen = lambda: next(cyc)
-        lr = LogisticRegression(random_state=0)
+        lr = LogisticRegression(solver='lbfgs', random_state=0)
         self.checkKeyedModelEquivalent(minExamples, featureGen, labelGen,
                                        sklearnEstimator=lr, yCol="y")
 

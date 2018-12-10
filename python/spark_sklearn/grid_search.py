@@ -117,11 +117,11 @@ class GridSearchCV(BaseSearchCV):
     >>> sc = createLocalSparkSession().sparkContext
     >>> iris = datasets.load_iris()
     >>> parameters = {'kernel':('linear', 'rbf'), 'C':[1, 10]}
-    >>> svr = svm.SVC()
+    >>> svr = svm.SVC(gamma='auto')
     >>> clf = GridSearchCV(sc, svr, parameters)
     >>> clf.fit(iris.data, iris.target)
     ...                             # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
-    GridSearchCV(cv=None, error_score=...,
+    GridSearchCV(cv=3, error_score=...,
            estimator=SVC(C=1.0, cache_size=..., class_weight=..., coef0=...,
                          decision_function_shape=..., degree=..., gamma=...,
                          kernel='rbf', max_iter=-1, probability=False,
@@ -242,7 +242,7 @@ class GridSearchCV(BaseSearchCV):
 
 
     def __init__(self, sc, estimator, param_grid, scoring=None, fit_params=None,
-                 n_jobs=1, iid=True, refit=True, cv=None, verbose=0,
+                 n_jobs=1, iid=True, refit=True, cv=3, verbose=0,
                  pre_dispatch='2*n_jobs', error_score='raise', return_train_score=True):
         super(GridSearchCV, self).__init__(
             estimator=estimator, scoring=scoring, n_jobs=n_jobs, iid=iid,

@@ -26,7 +26,7 @@ class ConverterTests(MLlibTestCase):
         self.assertEqual(skl.intercept_, spark.intercept)
 
     def test_LogisticRegression_skl2spark(self):
-        skl_lr = SKL_LogisticRegression().fit(self.X, self.y)
+        skl_lr = SKL_LogisticRegression(solver='lbfgs').fit(self.X, self.y)
         lr = self.converter.toSpark(skl_lr)
         self.assertTrue(isinstance(lr, LogisticRegressionModel),
                         "Expected LogisticRegressionModel but found type %s" % type(lr))
@@ -72,7 +72,6 @@ class ConverterTests(MLlibTestCase):
 @fixtureReuseSparkSession
 class CSRVectorUDTTests(MLlibTestCase):
 
-    @unittest.skip("CSR Matrix support not present for Spark 2.0 - see issue #24")
     def test_scipy_sparse(self):
         data = [(self.list2csr([0.1, 0.2]),)]
         df = self.sql.createDataFrame(data, ["features"])

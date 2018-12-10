@@ -35,7 +35,7 @@ class CVTests2(MLlibTestCase):
         # The classic example from the sklearn documentation
         iris = datasets.load_iris()
         parameters = {'kernel':('linear', 'rbf'), 'C':[1, 10]}
-        svr = svm.SVC()
+        svr = svm.SVC(gamma='auto')
         clf = grid_search.GridSearchCV(svr, parameters)
         clf.fit(iris.data, iris.target)
 
@@ -55,7 +55,7 @@ class CVTests(MLlibTestCase):
 
     def test_cv_linreg(self):
         pipeline = SKL_Pipeline([
-            ('lasso', SKL_Lasso(max_iter=1))
+            ('lasso', SKL_Lasso())
         ])
         parameters = {
             'lasso__alpha': (0.001, 0.005, 0.01)
@@ -70,7 +70,7 @@ class CVTests(MLlibTestCase):
         pipeline = SKL_Pipeline([
             ('vect', SKL_HashingVectorizer(n_features=20)),
             ('tfidf', SKL_TfidfTransformer(use_idf=False)),
-            ('lasso', SKL_Lasso(max_iter=1))
+            ('lasso', SKL_Lasso())
         ])
         parameters = {
             'lasso__alpha': (0.001, 0.005, 0.01)
@@ -113,7 +113,7 @@ class CVTests(MLlibTestCase):
         df = self.converter.toPandas(data.select(data.features.alias("review"), "rating"))
 
         pipeline = SKL_Pipeline([
-            ('lasso', SKL_Lasso(max_iter=1))
+            ('lasso', SKL_Lasso())
         ])
         parameters = {
             'lasso__alpha': (0.001, 0.005, 0.01)
