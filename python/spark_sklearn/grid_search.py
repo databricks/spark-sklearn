@@ -4,8 +4,9 @@ Class for parallelizing GridSearchCV jobs in scikit-learn
 
 from collections import defaultdict, Sized
 from functools import partial
+from itertools import islice
 import warnings
-
+from random import randint
 import numpy as np
 from scipy.stats import rankdata
 
@@ -281,7 +282,11 @@ class GridSearchCV(BaseSearchCV):
 
         estimator = self.estimator
         cv = check_cv(self.cv, y, classifier=is_classifier(estimator))
-
+        
+        if hasattr(cv, 'random_state'):
+            if not cv.random_state:
+                cv.random_state = randint(1000, 9999)
+                
         self.scorer_ = check_scoring(self.estimator, scoring=self.scoring)
 
         X, y, groups = indexable(X, y, groups)
@@ -295,14 +300,14 @@ class GridSearchCV(BaseSearchCV):
 
         base_estimator = clone(self.estimator)
 
-        param_grid = [(parameters, train, test) for parameters in parameter_iterable
-                                                for train, test in list(cv.split(X, y, groups))]
+        param_grid = [(parameters, test_sequence_index) for parameters in parameter_iterable for test_sequence_index in range(n_splits)]
         # Because the original python code expects a certain order for the elements, we need to
         # respect it.
         indexed_param_grid = list(zip(range(len(param_grid)), param_grid))
         par_param_grid = self.sc.parallelize(indexed_param_grid, len(indexed_param_grid))
         X_bc = self.sc.broadcast(X)
         y_bc = self.sc.broadcast(y)
+        groups_bc = self.sc.broadcast(groups)
 
         scorer = self.scorer_
         verbose = self.verbose
@@ -312,10 +317,13 @@ class GridSearchCV(BaseSearchCV):
         fas = _fit_and_score
 
         def fun(tup):
-            (index, (parameters, train, test)) = tup
+            (index, (parameters, test_sequence_index)) = tup
             local_estimator = clone(base_estimator)
             local_X = X_bc.value
             local_y = y_bc.value
+            local_groups = groups_bc.value
+            
+            train, test = next(islice(cv.split(local_X, local_y, local_groups), test_sequence_index, test_sequence_index + 1))
             res = fas(local_estimator, local_X, local_y, scorer, train, test, verbose,
                       parameters, fit_params,
                       return_train_score=return_train_score,
@@ -331,6 +339,7 @@ class GridSearchCV(BaseSearchCV):
             (test_scores, test_sample_counts, fit_time, score_time, parameters) = zip(*out)
         X_bc.unpersist()
         y_bc.unpersist()
+        groups_bc.unpersist()
 
         candidate_params = parameters[::n_splits]
         n_candidates = len(candidate_params)
