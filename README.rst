@@ -26,7 +26,7 @@ This package is available on PYPI:
 
 	pip install spark-sklearn
 
-This project is also available as as `Spark package <https://spark-packages.org/package/databricks/spark-sklearn>`_.
+This project is also available as `Spark package <https://spark-packages.org/package/databricks/spark-sklearn>`_.
 
 The developer version has the following requirements:
 
