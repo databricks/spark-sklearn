@@ -2,7 +2,6 @@
 from scipy.sparse import csr_matrix
 from sklearn.linear_model import LogisticRegression as SKL_LogisticRegression
 from sklearn.linear_model import LinearRegression as SKL_LinearRegression
-import unittest
 
 from pyspark.ml.linalg import Vectors
 from pyspark.ml.regression import LinearRegression, LinearRegressionModel
@@ -10,6 +9,7 @@ from pyspark.ml.classification import LogisticRegression, LogisticRegressionMode
 
 from spark_sklearn.test_utils import MLlibTestCase, fixtureReuseSparkSession
 from spark_sklearn import Converter
+
 
 @fixtureReuseSparkSession
 class ConverterTests(MLlibTestCase):
@@ -59,8 +59,8 @@ class ConverterTests(MLlibTestCase):
 
     def ztest_toPandas(self):
         data = [(Vectors.dense([0.1, 0.2]),),
-                (Vectors.sparse(2, {0:0.3, 1:0.4}),),
-                (Vectors.sparse(2, {0:0.5, 1:0.6}),)]
+                (Vectors.sparse(2, {0: 0.3, 1: 0.4}),),
+                (Vectors.sparse(2, {0: 0.5, 1: 0.6}),)]
         df = self.sql.createDataFrame(data, ["features"])
         self.assertEqual(df.count(), 3)
         pd = self.converter.toPandas(df)
@@ -70,8 +70,9 @@ class ConverterTests(MLlibTestCase):
                         type(pd.features[0]))
         self.assertEqual(pd.features[0].shape[0], 3)
         self.assertEqual(pd.features[0].shape[1], 2)
-        self.assertEqual(pd.features[0][0,0], 0.1)
-        self.assertEqual(pd.features[0][0,1], 0.2)
+        self.assertEqual(pd.features[0][0, 0], 0.1)
+        self.assertEqual(pd.features[0][0, 1], 0.2)
+
 
 @fixtureReuseSparkSession
 class CSRVectorUDTTests(MLlibTestCase):
@@ -87,5 +88,5 @@ class CSRVectorUDTTests(MLlibTestCase):
                         type(pd.features[0]))
         self.assertEqual(pd.features[0].shape[0], 1)
         self.assertEqual(pd.features[0].shape[1], 2)
-        self.assertEqual(pd.features.values[0][0,0], 0.1)
-        self.assertEqual(pd.features.values[0][0,1], 0.2)
+        self.assertEqual(pd.features.values[0][0, 0], 0.1)
+        self.assertEqual(pd.features.values[0][0, 1], 0.2)

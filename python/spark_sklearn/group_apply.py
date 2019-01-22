@@ -11,6 +11,7 @@ from pyspark.sql.functions import explode, udf
 from pyspark.sql.types import *
 from pyspark.sql.types import Row
 
+
 def gapply(grouped_data, func, schema, *cols):
     """Applies the function ``func`` to data grouped by key. In particular, given a dataframe
     grouped by some set of key columns key1, key2, ..., keyn, this method groups all the values
@@ -38,6 +39,7 @@ def gapply(grouped_data, func, schema, *cols):
     :note: Users must ensure that the grouped values for every group must fit entirely in memory.
     :note: This method is only available if Pandas is installed.
 
+    :param grouped_data: data grouped by key
     :param func: a two argument function, which may be either a lambda or named function
     :param schema: the return schema for ``func``, a :class:`StructType`
     :param cols: list of column names (string only)
@@ -129,10 +131,10 @@ def gapply(grouped_data, func, schema, *cols):
 
     inputAggDF = grouped_data.agg({col: 'collect_list' for col in cols})
     # Recover canonical order (aggregation may change column order)
-    cannonicalOrder = chain(keyCols, [inputAggDF['collect_list(' + col + ')'] for col in cols])
-    inputAggDF = inputAggDF.select(*cannonicalOrder)
+    canonicalOrder = chain(keyCols, [inputAggDF['collect_list(' + col + ')'] for col in cols])
+    inputAggDF = inputAggDF.select(*canonicalOrder)
 
-    # Wraps the user-proveded function with another python function, which prepares the
+    # Wraps the user-provided function with another python function, which prepares the
     # input in the form specified by the documentation. Then, once the function completes,
     # this wrapper prepends the keys to the output values and converts from pandas.
     def pandasWrappedFunc(*args):
@@ -142,12 +144,12 @@ def gapply(grouped_data, func, schema, *cols):
         if len(paramKeys) == 1:
             paramKeys = paramKeys[0]
         valuesDF = pd.DataFrame.from_dict(dict(zip(cols, collectedCols)))
-        valuesDF = valuesDF[list(cols)] # reorder to canonical
+        valuesDF = valuesDF[list(cols)]  # reorder to canonical
         outputDF = func(paramKeys, valuesDF)
         valCols = outputDF.columns.tolist()
         for key, keyName in zip(keys, keyCols):
             outputDF[keyName] = key
-        outputDF = outputDF[keyCols + valCols] # reorder to canonical
+        outputDF = outputDF[keyCols + valCols]  # reorder to canonical
         # To recover native python types for serialization, we need
         # to convert the pandas dataframe to a numpy array, then to a
         # native list (can't go straight to native, since pandas will

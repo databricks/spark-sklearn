@@ -5,7 +5,6 @@ Class for converting between scikit-learn models and PySpark ML models
 from collections import namedtuple
 
 import numpy as np
-import scipy
 from scipy.sparse import csr_matrix
 
 from sklearn.linear_model import LogisticRegression as SKL_LogisticRegression
@@ -38,10 +37,10 @@ class Converter(object):
         self.sc = sc
         # For conversions sklearn -> Spark
         self._skl2spark_classes = {
-            SKL_LogisticRegression :
+            SKL_LogisticRegression:
                 ClassNames("org.apache.spark.ml.classification.LogisticRegressionModel",
                            LogisticRegressionModel),
-            SKL_LinearRegression :
+            SKL_LinearRegression:
                 ClassNames("org.apache.spark.ml.regression.LinearRegressionModel",
                            LinearRegressionModel)
         }
@@ -105,7 +104,7 @@ class Converter(object):
         :return: scikit-learn model with equivalent predictive behavior.
                  Currently, parameters or arguments for training are not copied.
         """
-        if isinstance(model, LogisticRegressionModel) :
+        if isinstance(model, LogisticRegressionModel):
             return self._toSKLGLM(model, True)
         if isinstance(model, LinearRegressionModel):
             return self._toSKLGLM(model, False)
@@ -143,6 +142,7 @@ class Converter(object):
         cols = df.columns
         # Convert any MLlib Vector columns to scipy.sparse.csr_matrix
         matrixCols = []
+
         def toscipy(v):
             if isinstance(v, DenseVector):
                 return csr_matrix((v.values, np.array(range(v.size)), np.array([0, v.size])),

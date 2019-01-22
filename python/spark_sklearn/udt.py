@@ -5,6 +5,7 @@ from scipy.sparse import csr_matrix
 from pyspark.sql.types import ByteType, IntegerType, ArrayType, DoubleType, \
     StructField, StructType, UserDefinedType
 
+
 class CSRVectorUDT(UserDefinedType):
     """
     SQL user-defined type (UDT) for scipy.sparse.csr_matrix (vectors only, not matrices).
@@ -33,7 +34,7 @@ class CSRVectorUDT(UserDefinedType):
             size = obj.shape[1]
             indices = [int(i) for i in obj.indices]
             values = [float(v) for v in obj.data]
-            return (0, size, indices, values)
+            return 0, size, indices, values
         else:
             raise TypeError("cannot serialize %r of type %r" % (obj, type(obj)))
 
@@ -41,7 +42,7 @@ class CSRVectorUDT(UserDefinedType):
         assert len(datum) == 4, \
             "CSRVectorUDT.deserialize given row with length %d but requires 4" % len(datum)
         tpe = datum[0]
-        assert tpe==0, "CSRVectorUDT.deserialize requires sparse format"
+        assert tpe == 0, "CSRVectorUDT.deserialize requires sparse format"
         data = np.array(datum[3])
         indices = np.array(datum[2])
         size = datum[1]

@@ -6,7 +6,6 @@ from sklearn.cluster import DBSCAN, KMeans
 from sklearn.decomposition import PCA
 from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import LogisticRegression
-import unittest
 
 from pyspark.sql.types import *
 from pyspark.ml.linalg import Vectors
@@ -15,13 +14,15 @@ import sklearn.base
 from spark_sklearn.keyed_models import KeyedEstimator, KeyedModel, SparkSklearnEstimator
 from spark_sklearn.test_utils import fixtureReuseSparkSession, assertPandasAlmostEqual, RandomTest
 
+
 def _sortByComponentWeight(pca):
     zipped = zip(pca.components_, pca.explained_variance_ratio_)
     ordered = sorted(zipped, key=lambda x: x[1])
     return tuple(np.array(unzipped) for unzipped in zip(*ordered))
 
+
 def _assertPandasAlmostEqual(actual, expected, sortby):
-    def convert_estimators(x): # note convertion makes estimators invariant to training order.
+    def convert_estimators(x):  # note conversion makes estimators invariant to training order.
         if isinstance(x, SparkSklearnEstimator):
             x = x.estimator
         if isinstance(x, LinearRegression) or isinstance(x, LogisticRegression):
@@ -33,6 +34,7 @@ def _assertPandasAlmostEqual(actual, expected, sortby):
         return x
     assertPandasAlmostEqual(actual, expected, convert=convert_estimators, sortby=sortby)
 
+
 @fixtureReuseSparkSession
 class KeyedModelTests(RandomTest):
 
@@ -41,17 +43,21 @@ class KeyedModelTests(RandomTest):
     class _CustomClusterer(sklearn.base.BaseEstimator):
         def fit(X, y=None):
             pass
+
         def transform(X):
             return X
+
         def fit_predict(X):
             return np.zeros(len(X))
 
     class _CustomTransformer(sklearn.base.BaseEstimator):
-        def fit(X): # Only 1 argument expected!
+        def fit(X):  # Only 1 argument expected!
             pass
+
         def transform(X):
             return X
-        def predict(X): # Dummy predict to throw us off - all sklearn clusterers have fit_predict
+
+        def predict(X):  # Dummy predict to throw us off - all sklearn clusterers have fit_predict
             return np.zeros(len(X))
 
     class _CustomMissingFit(sklearn.base.BaseEstimator):
@@ -100,8 +106,10 @@ class KeyedModelTests(RandomTest):
         # sklearnEstimator must be a sklearn.base.Estimator
         create = lambda: KeyedEstimator(sklearnEstimator=5)
         self.assertRaises(ValueError, create)
+
         class SomeUDC(object):
             pass
+
         create = lambda: KeyedEstimator(sklearnEstimator=SomeUDC())
         self.assertRaises(ValueError, create)
 
@@ -170,7 +178,6 @@ class KeyedModelTests(RandomTest):
         keyedLR = KeyedEstimator(sklearnEstimator=LinearRegression(), yCol="y")
         self.assertRaises(TypeError, keyedLR.fit, df)
 
-
     def checkKeyedModelEquivalent(self, minExamples, featureGen, labelGen, **kwargs):
         NUSERS = 10
         # featureGen() should generate a np rank-1 ndarray of equal length
@@ -231,13 +238,15 @@ class KeyedModelTests(RandomTest):
         inputDF[xCol] = flattenAndConvertNumpy(testFeatures)
         inputDF["useless"] = flattenAndConvertNumpy(useless)
 
-        estimatorType = km.sklearnEstimatorType # tested to be correct elsewhere
+        estimatorType = km.sklearnEstimatorType  # tested to be correct elsewhere
+
         def makeOutput(estimator, X):
             if estimatorType == "transformer":
                 return estimator.transform(X)
             else:
                 assert estimatorType == "predictor" or estimatorType == "clusterer"
                 return estimator.predict(X).tolist()
+
         Xs = [np.vstack(x) for x in testFeatures]
         expectedOutput = map(makeOutput, localEstimators, Xs)
         expectedDF = inputDF.copy(deep=True)
@@ -262,7 +271,6 @@ class KeyedModelTests(RandomTest):
         self.checkKeyedModelEquivalent(minExamples, featureGen, labelGen,
                                        sklearnEstimator=KMeans(random_state=0,
                                                                n_clusters=minExamples))
-
 
     def test_regression_predictor(self):
         minExamples = 1

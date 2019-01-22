@@ -7,11 +7,11 @@ from setuptools import setup
 PACKAGES = ["spark_sklearn"]
 KEYWORDS = ["spark", "scikit-learn", "distributed computing", "machine learning"]
 CLASSIFIERS = [
-	"Programming Language :: Python :: 2.6",
-	"Programming Language :: Python :: 2.7",
-	"Programming Language :: Python :: 3",
-	"Programming Language :: Python :: 3.2",
-	"Development Status :: 4 - Beta",
+    "Programming Language :: Python :: 2.6",
+    "Programming Language :: Python :: 2.7",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.2",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Natural Language :: English",
     "License :: OSI Approved :: Apache Software License",
@@ -33,20 +33,21 @@ def read(*parts):
     with codecs.open(os.path.join(ROOT, *parts), "rb", "utf-8") as f:
         return f.read()
 
+
 setup(
-	name="spark-sklearn",
-	description="Integration tools for running scikit-learn on Spark",
-	license="Apache 2.0",
-	url="https://github.com/databricks/spark-sklearn",
-	version="0.2.3",
-	author="Joseph Bradley",
-	author_email="joseph@databricks.com",
-	maintainer="Tim Hunter",
-	maintainer_email="timhunter@databricks.com",
-	keywords=KEYWORDS,
-	long_description=read("README.rst"),
-	packages=PACKAGES,
-	classifiers=CLASSIFIERS,
-	zip_safe=False,
-	install_requires=INSTALL_REQUIRES
+    name="spark-sklearn",
+    description="Integration tools for running scikit-learn on Spark",
+    license="Apache 2.0",
+    url="https://github.com/databricks/spark-sklearn",
+    version="0.2.3",
+    author="Joseph Bradley",
+    author_email="joseph@databricks.com",
+    maintainer="Tim Hunter",
+    maintainer_email="timhunter@databricks.com",
+    keywords=KEYWORDS,
+    long_description=read("README.rst"),
+    packages=PACKAGES,
+    classifiers=CLASSIFIERS,
+    zip_safe=False,
+    install_requires=INSTALL_REQUIRES
 )

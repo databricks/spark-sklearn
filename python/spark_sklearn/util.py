@@ -7,6 +7,7 @@ from pyspark.sql import SparkSession
 # WARNING: These are private Spark APIs.
 from pyspark.ml.common import _py2java, _java2py
 
+
 def _jvm():
     """
     Returns the JVM view associated with SparkContext. Must be called
@@ -18,6 +19,7 @@ def _jvm():
     else:
         raise AttributeError("Cannot load _jvm from SparkContext. Is SparkContext initialized?")
 
+
 def _new_java_obj(sc, java_class, *args):
     """
     Construct a new Java object.
@@ -28,6 +30,7 @@ def _new_java_obj(sc, java_class, *args):
     java_args = [_py2java(sc, arg) for arg in args]
     return java_obj(*java_args)
 
+
 def _call_java(sc, java_obj, name, *args):
     """
     Method copied from pyspark.ml.wrapper.  Uses private Spark APIs.
@@ -36,12 +39,14 @@ def _call_java(sc, java_obj, name, *args):
     java_args = [_py2java(sc, arg) for arg in args]
     return _java2py(sc, m(*java_args))
 
+
 def _randomUID(cls):
     """
     Generate a unique id for the object. The default implementation
     concatenates the class name, "_", and 12 random hex chars.
     """
     return cls.__name__ + "_" + uuid.uuid4().hex[12:]
+
 
 def createLocalSparkSession(appName="spark-sklearn"):
     """Generates a :class:`SparkSession` utilizing all local cores

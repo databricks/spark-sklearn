@@ -5,19 +5,17 @@ Class for parallelizing GridSearchCV jobs in scikit-learn
 from collections import defaultdict, Sized
 from functools import partial
 from itertools import islice
-import warnings
 from random import randint
 import numpy as np
 from scipy.stats import rankdata
 
-from sklearn.base import BaseEstimator, is_classifier, clone
+from sklearn.base import is_classifier, clone
 from sklearn.metrics.scorer import check_scoring
 from sklearn.model_selection import KFold, check_cv, ParameterGrid
 from sklearn.model_selection._validation import _fit_and_score
-from sklearn.model_selection._search import BaseSearchCV, _check_param_grid, _CVScoreTuple
+from sklearn.model_selection._search import BaseSearchCV, _check_param_grid
 from sklearn.utils.fixes import MaskedArray
-from sklearn.utils.metaestimators import _safe_split
-from sklearn.utils.validation import _num_samples, indexable
+from sklearn.utils.validation import indexable
 
 
 class GridSearchCV(BaseSearchCV):
@@ -241,7 +239,6 @@ class GridSearchCV(BaseSearchCV):
     
     """
 
-
     def __init__(self, sc, estimator, param_grid, scoring=None, fit_params=None,
                  n_jobs=1, iid=True, refit=True, cv=3, verbose=0,
                  pre_dispatch='2*n_jobs', error_score='raise', return_train_score=True):
@@ -300,7 +297,9 @@ class GridSearchCV(BaseSearchCV):
 
         base_estimator = clone(self.estimator)
 
-        param_grid = [(parameters, test_sequence_index) for parameters in parameter_iterable for test_sequence_index in range(n_splits)]
+        param_grid = [(parameters, test_sequence_index)
+                      for parameters in parameter_iterable
+                      for test_sequence_index in range(n_splits)]
         # Because the original python code expects a certain order for the elements, we need to
         # respect it.
         indexed_param_grid = list(zip(range(len(param_grid)), param_grid))
@@ -323,13 +322,14 @@ class GridSearchCV(BaseSearchCV):
             local_y = y_bc.value
             local_groups = groups_bc.value
             
-            train, test = next(islice(cv.split(local_X, local_y, local_groups), test_sequence_index, test_sequence_index + 1))
+            train, test = next(islice(
+                cv.split(local_X, local_y, local_groups), test_sequence_index, test_sequence_index + 1))
             res = fas(local_estimator, local_X, local_y, scorer, train, test, verbose,
                       parameters, fit_params,
                       return_train_score=return_train_score,
                       return_n_test_samples=True, return_times=True,
                       return_parameters=True, error_score=error_score)
-            return (index, res)
+            return index, res
         indexed_out0 = dict(par_param_grid.map(fun).collect())
         out = [indexed_out0[idx] for idx in range(len(param_grid))]
         if return_train_score:
@@ -393,7 +393,7 @@ class GridSearchCV(BaseSearchCV):
         for cand_i, params in enumerate(candidate_params):
             for name, value in params.items():
                 # An all masked empty array gets created for the key
-                # `"param_%s" % name` at the first occurence of `name`.
+                # `"param_%s" % name` at the first occurrence of `name`.
                 # Setting the value at an index also unmasks that index
                 param_results["param_%s" % name][cand_i] = value
 

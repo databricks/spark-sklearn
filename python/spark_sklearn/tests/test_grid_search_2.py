@@ -5,6 +5,11 @@ from sklearn.feature_extraction.text import HashingVectorizer as SKL_HashingVect
 from sklearn.feature_extraction.text import TfidfTransformer as SKL_TfidfTransformer
 from sklearn.pipeline import Pipeline as SKL_Pipeline
 from sklearn import svm, grid_search, datasets
+from pyspark.ml import Pipeline
+from pyspark.ml.feature import HashingTF, Tokenizer
+from spark_sklearn.converter import Converter
+from spark_sklearn.grid_search import GridSearchCV
+from spark_sklearn.test_utils import MLlibTestCase, fixtureReuseSparkSession
 import sys
 if sys.version_info[:2] <= (2, 6):
     try:
@@ -16,14 +21,6 @@ else:
     import unittest
 
 
-from pyspark.ml import Pipeline
-from pyspark.ml.feature import HashingTF, Tokenizer
-
-from spark_sklearn.converter import Converter
-from spark_sklearn.grid_search import GridSearchCV
-
-from spark_sklearn.test_utils import MLlibTestCase, fixtureReuseSparkSession
-
 @fixtureReuseSparkSession
 class CVTests2(MLlibTestCase):
 
@@ -34,7 +31,7 @@ class CVTests2(MLlibTestCase):
     def test_example(self):
         # The classic example from the sklearn documentation
         iris = datasets.load_iris()
-        parameters = {'kernel':('linear', 'rbf'), 'C':[1, 10]}
+        parameters = {'kernel': ('linear', 'rbf'), 'C': [1, 10]}
         svr = svm.SVC(gamma='auto')
         clf = grid_search.GridSearchCV(svr, parameters)
         clf.fit(iris.data, iris.target)
@@ -45,6 +42,7 @@ class CVTests2(MLlibTestCase):
         b1 = clf.estimator
         b2 = clf2.estimator
         self.assertEqual(b1.get_params(), b2.get_params())
+
 
 @fixtureReuseSparkSession
 class CVTests(MLlibTestCase):
@@ -62,7 +60,7 @@ class CVTests(MLlibTestCase):
         }
         grid_search = GridSearchCV(self.sc, pipeline, parameters)
         X = scipy.sparse.vstack(map(lambda x: self.list2csr([x, x+1.0]), range(0, 100)))
-        y = np.array(list(range(0, 100))).reshape((100,1))
+        y = np.array(list(range(0, 100))).reshape((100, 1))
         skl_gs = grid_search.fit(X, y)
         assert len(skl_gs.cv_results_['params']) == len(parameters['lasso__alpha'])
 

@@ -1,6 +1,16 @@
 """
 Some test utilities to create the spark context.
 """
+
+import numpy as np
+import os
+import pandas as pd
+import random
+from scipy.sparse import csr_matrix
+import time
+from pyspark.sql import SparkSession
+from pyspark.ml.linalg import Vectors
+from spark_sklearn.util import createLocalSparkSession
 import sys
 if sys.version_info[:2] <= (2, 6):
     try:
@@ -10,17 +20,7 @@ if sys.version_info[:2] <= (2, 6):
         sys.exit(1)
 else:
     import unittest
-import numpy as np
-import os
-import pandas as pd
-import random
-from scipy.sparse import csr_matrix
-import time
 
-from pyspark.sql import SparkSession
-from pyspark.ml.linalg import Vectors
-
-from spark_sklearn.util import createLocalSparkSession
 
 # Used as decorator to wrap around a class deriving from unittest.TestCase. Wraps current
 # unittest methods setUpClass() and tearDownClass(), invoked by the nosetest command before
@@ -32,10 +32,12 @@ from spark_sklearn.util import createLocalSparkSession
 def fixtureReuseSparkSession(cls):
     setup = getattr(cls, 'setUpClass', None)
     teardown = getattr(cls, 'tearDownClass', None)
+
     def setUpClass(cls):
         cls.spark = createLocalSparkSession("Unit Tests")
         if setup:
             setup()
+
     def tearDownClass(cls):
         if teardown:
             teardown()
@@ -50,15 +52,16 @@ def fixtureReuseSparkSession(cls):
     cls.tearDownClass = classmethod(tearDownClass)
     return cls
 
+
 class MLlibTestCase(unittest.TestCase):
     def setUp(self):
         super(MLlibTestCase, self).setUp()
         self.sc = self.spark.sparkContext
         self.sql = self.spark
-        self.X = np.array([[1,2,3],
-                           [-1,2,3], [1,-2,3], [1,2,-3],
-                           [-1,-2,3], [1,-2,-3], [-1,2,-3],
-                           [-1,-2,-3]])
+        self.X = np.array([[1, 2, 3],
+                           [-1, 2, 3], [1, -2, 3], [1, 2, -3],
+                           [-1, -2, 3], [1, -2, -3], [-1, 2, -3],
+                           [-1, -2, -3]])
         self.y = np.array([1, 0, 1, 1, 0, 1, 0, 0])
         data = [(float(self.y[i]), Vectors.dense(self.X[i])) for i in range(len(self.y))]
         self.df = self.sql.createDataFrame(data, ["label", "features"])
@@ -67,10 +70,11 @@ class MLlibTestCase(unittest.TestCase):
     def list2csr(x):
         """
         Convert list to a scipy.sparse.csr_matrix
-        :param data: list
+        :param x: list
         :return:  csr_matrix with 1 row
         """
         return csr_matrix((np.array(x), np.array(range(0, len(x))), np.array([0, len(x)])))
+
 
 # Asserts that two Pandas dataframes are equal, with only 5 digits of precision for
 # floats.
@@ -91,10 +95,11 @@ def assertPandasAlmostEqual(actual, expected, convert=None, sortby=None):
     expected = normalize(expected)
     pd.util.testing.assert_almost_equal(actual, expected)
 
+
 # This unittest.TestCase subclass sets the random seed to be based on the time
 # that the test is run.
 #
-# If there is a SEED variable in the enviornment, then this is used as the seed.
+# If there is a SEED variable in the environnment, then this is used as the seed.
 # Sets both random and numpy.random.
 #
 # Prints the seed to stdout before running each test case.
