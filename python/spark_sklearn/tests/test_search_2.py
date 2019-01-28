@@ -9,6 +9,7 @@ from pyspark.ml import Pipeline
 from pyspark.ml.feature import HashingTF, Tokenizer
 from spark_sklearn.converter import Converter
 from spark_sklearn.grid_search import GridSearchCV
+from spark_sklearn.random_search import RandomizedSearchCV
 from spark_sklearn.test_utils import MLlibTestCase, fixtureReuseSparkSession
 import sys
 if sys.version_info[:2] <= (2, 6):
@@ -43,6 +44,21 @@ class CVTests2(MLlibTestCase):
         b2 = clf2.estimator
         self.assertEqual(b1.get_params(), b2.get_params())
 
+    def test_example_randomized_search(self):
+        # The classic example from the sklearn documentation
+        iris = datasets.load_iris()
+        parameters = {'kernel': ('linear', 'rbf'), 'C': range(1, 10)}
+        svr = svm.SVC()
+        clf = grid_search.RandomizedSearchCV(svr, parameters, random_state=4)
+        clf.fit(iris.data, iris.target)
+
+        clf2 = RandomizedSearchCV(self.sc, svr, parameters, random_state=4)
+        clf2.fit(iris.data, iris.target)
+
+        b1 = clf.estimator
+        b2 = clf2.estimator
+        self.assertEqual(b1.get_params(), b2.get_params())
+
 
 @fixtureReuseSparkSession
 class CVTests(MLlibTestCase):
@@ -63,6 +79,20 @@ class CVTests(MLlibTestCase):
         y = np.array(list(range(0, 100))).reshape((100, 1))
         skl_gs = grid_search.fit(X, y)
         assert len(skl_gs.cv_results_['params']) == len(parameters['lasso__alpha'])
+
+    def test_cv_linreg(self):
+        pipeline = SKL_Pipeline([
+            ('lasso', SKL_Lasso(max_iter=1))
+        ])
+        parameters = {
+            'lasso__alpha': np.linspace(0.001, 0.01, 1000)
+        }
+        n_iter = 10
+        grid_search = RandomizedSearchCV(self.sc, pipeline, parameters, n_iter=n_iter)
+        X = scipy.sparse.vstack(map(lambda x: self.list2csr([x, x+1.0]), range(0, 100)))
+        y = np.array(list(range(0, 100))).reshape((100, 1))
+        skl_gs = grid_search.fit(X, y)
+        assert len(skl_gs.cv_results_['params']) == n_iter
 
     def test_cv_pipeline(self):
         pipeline = SKL_Pipeline([

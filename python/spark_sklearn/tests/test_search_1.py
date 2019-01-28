@@ -1,7 +1,8 @@
 import unittest
 
 import sklearn.grid_search
-from spark_sklearn import GridSearchCV
+from spark_sklearn.grid_search import GridSearchCV
+from spark_sklearn.random_search import RandomizedSearchCV
 from spark_sklearn.test_utils import fixtureReuseSparkSession
 # Overwrite the sklearn GridSearch in this suite so that we can run the same tests with the same
 # parameters.
@@ -17,6 +18,8 @@ class AllTests(unittest.TestCase):
         # Restore sklearn module to the original state after done testing this fixture.
         sklearn.grid_search.GridSearchCV = sklearn.grid_search.GridSearchCV_original
         del sklearn.grid_search.GridSearchCV_original
+        sklearn.grid_search.RandomizedSearchCV = sklearn.grid_search.RandomizedSearchCV_original
+        del sklearn.grid_search.RandomizedSearchCV_original
 
 
 class SPGridSearchWrapper(GridSearchCV):
@@ -26,6 +29,18 @@ class SPGridSearchWrapper(GridSearchCV):
         super(SPGridSearchWrapper, self).__init__(AllTests.spark.sparkContext, estimator, param_grid,
                                                   scoring, fit_params, n_jobs, iid, refit, cv,
                                                   verbose, pre_dispatch, error_score)
+
+
+class SPRandomizedSearchWrapper(RandomizedSearchCV):
+    def __init__(self, estimator, param_distributions, n_iter=10, scoring=None,
+                 fit_params=None, n_jobs=1, iid=True, refit=True, cv=None,
+                 verbose=0, pre_dispatch='2*n_jobs', random_state=None,
+                 error_score='raise'):
+        super(SPRandomizedSearchWrapper, self).__init__(AllTests.spark.sparkContext, estimator,
+                                                        param_distributions,
+                                                        n_iter, scoring, fit_params, n_jobs, iid, refit, cv,
+                                                        verbose,
+                                                        pre_dispatch, random_state, error_score)
 
 
 def _create_method(method):
@@ -42,6 +57,11 @@ def _add_to_module():
     SKGridSearchCV = sklearn.grid_search.GridSearchCV
     sklearn.grid_search.GridSearchCV = SPGridSearchWrapper
     sklearn.grid_search.GridSearchCV_original = SKGridSearchCV
+
+    SKRandomizedSearchCV = sklearn.grid_search.RandomizedSearchCV
+    sklearn.grid_search.RandomizedSearchCV = SPRandomizedSearchWrapper
+    sklearn.grid_search.RandomizedSearchCV_original = SKRandomizedSearchCV
+
     from sklearn.model_selection.tests import test_search
     all_methods = [(mname, method) for (mname, method) in test_search.__dict__.items()
                    if mname.startswith("test_")]
