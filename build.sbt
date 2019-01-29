@@ -1,14 +1,14 @@
 // Your sbt build file. Guides on how to write one can be found at
 // http://www.scala-sbt.org/0.13/docs/index.html
 
-scalaVersion := "2.10.4"
+scalaVersion := "2.11.8"
 
-sparkVersion := "2.1.1"
+sparkVersion := "2.4.0"
 
 spName := "databricks/spark-sklearn"
 
 // Don't forget to set the version
-version := "0.2.3"
+version := "0.3.0"
 
 // All Spark Packages need a license
 licenses := Seq("Apache-2.0" -> url("http://opensource.org/licenses/Apache-2.0"))
