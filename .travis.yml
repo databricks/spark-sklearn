@@ -23,7 +23,7 @@ matrix:
         - SPARK_VERSION=2.4.0
         - NUMPY_VERSION=1.14.3
         - PANDAS_VERSION=0.23.0
-        - SCIKIT_VERSION=0.19.1
+        - SCIKIT_VERSION=0.19.2
 
 before_install:
  - ./bin/download_travis_dependencies.sh
