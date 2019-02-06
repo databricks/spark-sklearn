@@ -24,7 +24,7 @@ class RandomizedSearchCV(SparkBaseSearchCV):
 
     If all parameters are presented as a list,
     sampling without replacement is performed. If at least one parameter
-    is given as a distribution, sampling with replacement is used.
+    is given as a distribution, sampling with replacement is used for all parameters.
     It is highly recommended to use continuous distributions for continuous
     parameters.
 
