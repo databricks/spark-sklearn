@@ -1,3 +1,38 @@
+Deprecation
+===========
+
+This project is deprecated.
+We now recommend using scikit-learn and `Joblib Apache Spark Backend <https://github.com/joblib/joblib-spark>`_
+to distribute scikit-learn hyperparameter tuning tasks on a Spark cluster:
+
+You need ``pyspark>=2.4.4`` and ``scikit-learn>=0.21`` to use Joblib Apache Spark Backend, which can be installed using ``pip``:
+
+.. code:: bash
+
+    pip install joblibspark
+
+The following example shows how to distributed ``GridSearchCV`` on a Spark cluster using ``joblibspark``.
+Same applies to ``RandomizedSearchCV``.
+
+.. code:: python
+
+    from sklearn import svm, datasets
+    from sklearn.model_selection import GridSearchCV
+    from joblibspark import register_spark
+    from sklearn.utils import parallel_backend
+
+    register_spark() # register spark backend
+
+    iris = datasets.load_iris()
+    parameters = {'kernel':('linear', 'rbf'), 'C':[1, 10]}
+    svr = svm.SVC(gamma='auto')
+
+    clf = GridSearchCV(svr, parameters, cv=5)
+
+    with parallel_backend('spark', n_jobs=3):
+        clf.fit(iris.data, iris.target)
+
+
 Scikit-learn integration package for Apache Spark
 =================================================
 
@@ -70,6 +105,7 @@ on how to install the package.
     clf.fit(iris.data, iris.target)
 
 This classifier can be used as a drop-in replacement for any scikit-learn classifier, with the same API.
+
 
 Documentation
 -------------
